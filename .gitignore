@@ -1,0 +1,27 @@
+# Xcode
+*.xcuserstate
+xcuserdata/
+DerivedData/
+*.moved-aside
+*.pbxuser
+!default.pbxuser
+*.mode1v3
+!default.mode1v3
+*.perspectivev3
+!default.perspectivev3
+*.xcworkspace/xcuserdata/
+.idea
+
+# iOS
+*.ipa
+Pods/
+.build/
+LiveActivityExample/build/**
+
+# Node
+server/node_modules/
+server/.env
+server/*.p8
+
+# macOS
+.DS_Store
