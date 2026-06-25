@@ -16,89 +16,55 @@
 
   <main>
 
-    <!-- Push-to-Start -->
+    <!-- Broadcast channel -->
     <section class="card">
       <div class="card-header">
-        <h2>Push-to-Start</h2>
-        <span class="tag">Remote Start</span>
+        <h2>Broadcast Channel</h2>
+        <span class="tag tag-purple">via Ably</span>
       </div>
-      <p class="hint">Starts a new Live Activity on the device without the app being open. Requires the push-to-start token from the iOS app.</p>
+      <p class="hint">Create an APNS broadcast channel through Ably. Use the <strong>Broadcast ID</strong> below to start/update/end activities. Paste the <strong>APNS Channel ID</strong> into the iOS app so a locally-started Live Activity subscribes to it.</p>
+      <button class="btn primary" id="btn-create-broadcast">Create Broadcast</button>
       <div class="field">
-        <label for="pts-token">Push-to-Start Token</label>
-        <input type="text" id="pts-token" placeholder="Paste push-to-start token from iOS app">
+        <label for="bc-id">Broadcast ID <span class="tag">Ably</span></label>
+        <input type="text" id="bc-id" placeholder="Create a broadcast above, or paste an existing Ably broadcast id">
+      </div>
+      <div class="field">
+        <label for="bc-apns-channel">APNS Channel ID <span class="tag tag-purple">paste into iOS app</span></label>
+        <input type="text" id="bc-apns-channel" placeholder="Returned when a broadcast is created" readonly>
+      </div>
+    </section>
+
+    <!-- Start Live Activity -->
+    <section class="card">
+      <div class="card-header">
+        <h2>Start Live Activity</h2>
+        <span class="tag">Push-to-Start</span>
+      </div>
+      <p class="hint">Push-to-start a Live Activity on every device subscribed to the given Ably channel(s), using the Broadcast ID above. <strong>Note:</strong> this requires the iOS app to be registered with Ably push and subscribed to that Ably channel — not yet wired in this example app.</p>
+      <div class="field">
+        <label for="start-channels">Ably Channel(s) <span class="tag">comma-separated</span></label>
+        <input type="text" id="start-channels" placeholder="e.g. matches:arsenal-chelsea">
       </div>
       <div class="row-2">
         <div class="field">
-          <label for="pts-home">Home Team</label>
-          <input type="text" id="pts-home" value="Arsenal">
+          <label for="start-home">Home Team</label>
+          <input type="text" id="start-home" value="Arsenal">
         </div>
         <div class="field">
-          <label for="pts-away">Away Team</label>
-          <input type="text" id="pts-away" value="Chelsea">
+          <label for="start-away">Away Team</label>
+          <input type="text" id="start-away" value="Chelsea">
         </div>
       </div>
-      <div class="field">
-        <label for="pts-channel">Broadcast Channel ID <span class="tag tag-purple">optional · iOS 18+</span></label>
-        <input type="text" id="pts-channel" placeholder="Optional: start subscribed to this broadcast channel">
-      </div>
-      <button class="btn primary" id="btn-start">Start Live Activity Remotely</button>
+      <button class="btn primary" id="btn-start">Start Live Activity</button>
     </section>
 
     <!-- Update / End -->
     <section class="card">
       <div class="card-header">
-        <h2>Update Activity</h2>
-        <span class="tag">Direct Push</span>
+        <h2>Update / End</h2>
+        <span class="tag tag-purple">Broadcast</span>
       </div>
-      <p class="hint">Update or end a specific Live Activity using its push token. Copy the activity update token from the iOS app after starting an activity.</p>
-      <div class="field">
-        <label for="update-token">Activity Update Token</label>
-        <input type="text" id="update-token" placeholder="Paste activity update token from iOS app">
-      </div>
-      <div class="row-3">
-        <div class="field">
-          <label for="update-home-score">Home Score</label>
-          <input type="number" id="update-home-score" value="0" min="0">
-        </div>
-        <div class="field">
-          <label for="update-away-score">Away Score</label>
-          <input type="number" id="update-away-score" value="0" min="0">
-        </div>
-        <div class="field">
-          <label for="update-status">Match Status</label>
-          <select id="update-status">
-            <option value="upcoming">Upcoming</option>
-            <option value="live" selected>Live</option>
-            <option value="finished">Finished</option>
-          </select>
-        </div>
-      </div>
-      <div class="field">
-        <label for="update-event">Last Event</label>
-        <input type="text" id="update-event" placeholder="e.g. Goal by Saka (23')">
-      </div>
-      <div class="btn-row">
-        <button class="btn success" id="btn-update">Send Update</button>
-        <button class="btn danger" id="btn-end">End Activity</button>
-      </div>
-    </section>
-
-    <!-- Broadcast -->
-    <section class="card">
-      <div class="card-header">
-        <h2>Broadcast Update</h2>
-        <span class="tag tag-purple">iOS 18+</span>
-      </div>
-      <p class="hint">Send an update via an APNS broadcast channel. All subscribed Live Activities update simultaneously — no individual tokens needed. Create a channel here, then have the iOS app subscribe to it.</p>
-      <div class="btn-row">
-        <button class="btn primary" id="btn-create-channel">Create Channel</button>
-        <button class="btn ghost small" id="btn-list-channels">List Channels</button>
-        <button class="btn danger" id="btn-delete-channel">Delete Channel</button>
-      </div>
-      <div class="field">
-        <label for="bc-channel">Broadcast Channel ID</label>
-        <input type="text" id="bc-channel" placeholder="Create a channel above, or paste an existing channel ID">
-      </div>
+      <p class="hint">Send an update or end event over the broadcast channel using the Broadcast ID above. All subscribed Live Activities update simultaneously — no individual tokens needed.</p>
       <div class="row-3">
         <div class="field">
           <label for="bc-home-score">Home Score</label>
@@ -122,8 +88,8 @@
         <input type="text" id="bc-event" placeholder="e.g. Goal by Palmer (67')">
       </div>
       <div class="btn-row">
-        <button class="btn primary" id="btn-broadcast">Send Broadcast Update</button>
-        <button class="btn danger" id="btn-broadcast-end">End Broadcast</button>
+        <button class="btn success" id="btn-update">Send Update</button>
+        <button class="btn danger" id="btn-end">End Activity</button>
       </div>
     </section>
 

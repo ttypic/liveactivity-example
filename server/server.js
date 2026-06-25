@@ -3,19 +3,13 @@
 require('dotenv').config();
 const express = require('express');
 const path = require('node:path');
-const APNSClient = require('./apns');
+const AblyLiveActivity = require('./ably-live-activity');
 
 const app = express();
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-const apns = new APNSClient({
-  teamId: process.env.APPLE_TEAM_ID,
-  keyId: process.env.APPLE_KEY_ID,
-  keyPath: process.env.APPLE_KEY_PATH,
-  bundleId: process.env.APPLE_BUNDLE_ID,
-  env: process.env.APNS_ENV || 'sandbox',
-});
+const liveActivity = new AblyLiveActivity({ apiKey: process.env.ABLY_API_KEY });
 
 // Config for the dashboard UI
 app.get('/api/config', (req, res) => {
@@ -25,104 +19,60 @@ app.get('/api/config', (req, res) => {
   });
 });
 
-// Push-to-start: starts a new Live Activity on the device
-app.post('/api/push-to-start', async (req, res) => {
-  const { deviceToken, homeTeam, awayTeam, channelId } = req.body;
-  if (!deviceToken || !homeTeam || !awayTeam) {
-    return res.status(400).json({ error: 'deviceToken, homeTeam and awayTeam are required' });
+// Create an APNs broadcast channel via Ably.
+// Returns the Ably broadcast `id` (used for start/update/end) and the
+// `apnsChannelId` the iOS app subscribes to.
+app.post('/api/broadcasts', async (req, res) => {
+  try {
+    const { id, apnsChannelId } = await liveActivity.createBroadcast();
+    res.json({ success: true, id, apnsChannelId });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Push-to-start a Live Activity on devices subscribed to the given Ably channels.
+app.post('/api/live-activity/start', async (req, res) => {
+  const { channels, deviceId, apnsBroadcast, homeTeam, awayTeam } = req.body;
+  if (!apnsBroadcast) {
+    return res.status(400).json({ error: 'apnsBroadcast is required' });
+  }
+  if (!Array.isArray(channels) || channels.length === 0) {
+    return res.status(400).json({ error: 'at least one channel is required' });
+  }
+  if (!homeTeam || !awayTeam) {
+    return res.status(400).json({ error: 'homeTeam and awayTeam are required' });
   }
   try {
-    await apns.pushToStart({ deviceToken, homeTeam, awayTeam, channelId });
+    await liveActivity.start({ channels, deviceId, apnsBroadcast, homeTeam, awayTeam });
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// Update a running Live Activity
-app.post('/api/update-activity', async (req, res) => {
-  const { activityToken, homeScore, awayScore, matchStatus, lastEvent } = req.body;
-  if (!activityToken) {
-    return res.status(400).json({ error: 'activityToken is required' });
+// Broadcast an update to all subscribed Live Activities.
+app.post('/api/live-activity/update', async (req, res) => {
+  const { apnsBroadcast, homeScore, awayScore, matchStatus, lastEvent } = req.body;
+  if (!apnsBroadcast) {
+    return res.status(400).json({ error: 'apnsBroadcast is required' });
   }
   try {
-    await apns.updateActivity({ activityToken, homeScore, awayScore, matchStatus, lastEvent });
+    await liveActivity.update({ apnsBroadcast, homeScore, awayScore, matchStatus, lastEvent });
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// End a Live Activity
-app.post('/api/end-activity', async (req, res) => {
-  const { activityToken, homeScore, awayScore } = req.body;
-  if (!activityToken) {
-    return res.status(400).json({ error: 'activityToken is required' });
+// Broadcast an end event to all subscribed Live Activities.
+app.post('/api/live-activity/end', async (req, res) => {
+  const { apnsBroadcast, homeScore, awayScore } = req.body;
+  if (!apnsBroadcast) {
+    return res.status(400).json({ error: 'apnsBroadcast is required' });
   }
   try {
-    await apns.endActivity({ activityToken, homeScore, awayScore });
-    res.json({ success: true });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// Create a broadcast channel
-app.post('/api/channels', async (req, res) => {
-  try {
-    const { channelId } = await apns.createChannel();
-    res.json({ success: true, channelId });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// List broadcast channels
-app.get('/api/channels', async (req, res) => {
-  try {
-    const { channels } = await apns.listChannels();
-    res.json({ success: true, channels });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// Delete a broadcast channel
-app.delete('/api/channels/:channelId', async (req, res) => {
-  const { channelId } = req.params;
-  if (!channelId) {
-    return res.status(400).json({ error: 'channelId is required' });
-  }
-  try {
-    await apns.deleteChannel({ channelId });
-    res.json({ success: true });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// Broadcast update via APNS channel (iOS 18+)
-app.post('/api/broadcast-update', async (req, res) => {
-  const { channelId, homeScore, awayScore, matchStatus, lastEvent } = req.body;
-  if (!channelId) {
-    return res.status(400).json({ error: 'channelId is required' });
-  }
-  try {
-    await apns.broadcastUpdate({ channelId, homeScore, awayScore, matchStatus, lastEvent });
-    res.json({ success: true });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// Broadcast end via APNS channel (iOS 18+)
-app.post('/api/broadcast-end', async (req, res) => {
-  const { channelId, homeScore, awayScore } = req.body;
-  if (!channelId) {
-    return res.status(400).json({ error: 'channelId is required' });
-  }
-  try {
-    await apns.broadcastEnd({ channelId, homeScore, awayScore });
+    await liveActivity.end({ apnsBroadcast, homeScore, awayScore });
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -134,5 +84,5 @@ const server = app.listen(PORT, () => {
   console.log(`Dashboard running at http://localhost:${PORT}`);
 });
 
-process.on('SIGTERM', () => { apns.destroy(); server.close(); });
-process.on('SIGINT', () => { apns.destroy(); server.close(); });
+process.on('SIGTERM', () => server.close());
+process.on('SIGINT', () => server.close());

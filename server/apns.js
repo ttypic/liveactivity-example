@@ -310,3 +310,4 @@ class APNSClient {
 }
 
 module.exports = APNSClient;
+

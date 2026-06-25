@@ -1,10 +1,22 @@
 # Live Activity Example
 
-iOS Live Activity demo with a Node.js server dashboard. Shows all three ways to control Live Activities:
+iOS Live Activity demo with a Node.js server dashboard. The server drives Live
+Activities over an **APNS broadcast channel via [Ably](https://ably.com)** — the
+server holds only an Ably API key, and the Apple APNS auth key is configured in
+the Ably app. Two ways to control a Live Activity:
 
-- **Local** — start/end directly from the app using ActivityKit
-- **Remote (Push-to-Start)** — start a new Live Activity on the device without the app being open
-- **Broadcast** — update all subscribed activities simultaneously via an APNS broadcast channel (iOS 17.2+)
+- **Local** — start/end directly from the app using ActivityKit. Optionally
+  subscribe the started activity to a broadcast channel (`pushType: .channel`).
+- **Broadcast** — update or end all subscribed activities simultaneously via the
+  Ably push admin API (iOS 18+).
+
+> **Note on Push-to-Start:** the dashboard also exposes a push-to-start
+> (`liveActivity.start`) action. Ably's push-to-start targets devices that are
+> registered with Ably push and subscribed to an Ably channel — the iOS app in
+> this example does **not** integrate the Ably SDK, so that action is wired but
+> won't drive a device until Ably push is added to the app. The working
+> end-to-end flow is: create broadcast → start the activity locally subscribed to
+> the returned APNS channel id → update/end via the broadcast id.
 
 The Live Activity displays a sports match score with Dynamic Island support.
 
@@ -21,7 +33,8 @@ LiveActivityExample/        iOS Xcode project
   MatchScoreWidget/         Widget extension target
 
 server/                     Node.js dashboard
-  apns.js                   APNS HTTP/2 + JWT client
+  ably-live-activity.js     Ably push admin client (broadcast + live activity)
+  apns.js                   Legacy direct-APNS client (unused, kept for reference)
   server.js                 Express API server
   public/                   Web dashboard (HTML/CSS/JS)
 ```
@@ -68,7 +81,10 @@ server/                     Node.js dashboard
 
 ### Requirements
 - Node.js 18+
-- An Apple `.p8` key with APNs enabled (download from Apple Developer Portal → Keys)
+- An Ably account and an app with **Push** configured: upload your Apple APNS
+  auth key (`.p8`) in the Ably app's Push settings. Create an API key with the
+  **Push Admin** capability.
+- The Ably JS SDK is vendored as `server/ably-2.22.1.tgz` and installed from there.
 
 ### Steps
 
@@ -76,7 +92,7 @@ server/                     Node.js dashboard
 cd server
 npm install
 cp .env.example .env
-# Edit .env with your Apple credentials
+# Edit .env: set ABLY_API_KEY (and APPLE_BUNDLE_ID for the dashboard badge)
 npm start
 ```
 
@@ -86,35 +102,43 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 | Variable | Where to find it |
 |---|---|
-| `APPLE_TEAM_ID` | Apple Developer → Membership |
-| `APPLE_KEY_ID` | Developer Portal → Keys → your key |
-| `APPLE_BUNDLE_ID` | The bundle ID you set in Xcode |
-| `APPLE_KEY_PATH` | Path to the downloaded `.p8` file |
-| `APNS_ENV` | `sandbox` for dev/TestFlight, `production` for App Store |
+| `ABLY_API_KEY` | Ably dashboard → your app → API Keys (needs Push Admin) |
+| `APPLE_BUNDLE_ID` | The bundle ID you set in Xcode (shown in the dashboard badge) |
+| `APNS_ENV` | `sandbox`/`production` (shown in the dashboard badge) |
+
+`APPLE_TEAM_ID`, `APPLE_KEY_ID`, `APPLE_KEY_PATH` are no longer used by the server
+(the APNS key now lives in Ably); they remain only for the legacy `apns.js` helper.
 
 ---
 
 ## How to Use
 
-1. **Run the iOS app** on a physical device. The app displays three tokens:
-   - **Push-to-Start Token** — paste into the dashboard to start an activity remotely
-   - **Broadcast Channel ID** — paste into the dashboard to send broadcast updates
-   - **Activity Update Token** — appears after starting an activity; paste to send targeted updates
+1. **Start server**: `cd server && npm start` → open `http://localhost:3000`.
 
-2. **Start server**: `cd server && npm start` → open `http://localhost:3000`
+2. **Create a broadcast**: click "Create Broadcast". The dashboard shows:
+   - **Broadcast ID** — the Ably id used for start/update/end.
+   - **APNS Channel ID** — paste this into the iOS app.
 
-3. **Test each flow**:
-   - _Local start_: tap "Start Live Activity Locally" in the app
-   - _Remote start_: paste push-to-start token in dashboard → "Start Live Activity Remotely"
-   - _Update_: paste activity update token → adjust scores → "Send Update"
-   - _Broadcast_: paste broadcast channel ID → adjust scores → "Send Broadcast Update"
-   - _End_: "End Activity" button in dashboard or app
+3. **Run the iOS app** on a physical device, paste the **APNS Channel ID** into
+   the "Broadcast Channel" field, then tap "Start Live Activity Locally". The
+   activity subscribes to the channel via `pushType: .channel`.
+
+4. **Update / End**: in the dashboard, adjust scores and use "Send Update" /
+   "End Activity" — these broadcast to every subscribed activity via the
+   Broadcast ID. You can also end locally from the app.
+
+5. _(Advanced)_ **Start Live Activity** in the dashboard performs an Ably
+   push-to-start to devices subscribed to the given Ably channel(s). This needs
+   the app to integrate Ably push (not included here) — see the note at the top.
 
 ---
 
-## APNS Notes
+## API Notes
 
-- Push-to-start uses `apns-push-type: liveactivity` with topic `{bundleId}.push-type.liveactivity`
-- Broadcast channel endpoint: `POST /3/live-activity/{channelId}`
-- The server uses Node's built-in `http2` module with a persistent session and JWT auth (ES256)
-- JWT tokens are cached for 55 minutes and regenerated automatically
+- The server uses the Ably JS SDK push admin API:
+  - `rest.push.admin.createApnsBroadcast({ messageStoragePolicy })` → `{ id, apnsChannelId }`
+  - `rest.push.admin.liveActivity.start({ recipient: { channels }, apnsBroadcast, apns })`
+  - `rest.push.admin.liveActivity.update({ apnsBroadcast, apns, headers })`
+  - `rest.push.admin.liveActivity.end({ apnsBroadcast, apns, headers })`
+- The `apns` field is a standard APNS Live Activity payload (`{ aps: { event, content-state, … } }`), passed through to APNS by Ably.
+- Ably holds the APNS auth key, so the server needs no `.p8` or JWT signing of its own.
