@@ -46,8 +46,10 @@ async function apiPost(endpoint, body, btn) {
     } else {
       log(`${endpoint} → Error: ${data.error}`, 'err');
     }
+    return data;
   } catch (err) {
     log(`${endpoint} → Network error: ${err.message}`, 'err');
+    return { success: false, error: err.message };
   } finally {
     btn.disabled = false;
     btn.textContent = origText;
@@ -59,10 +61,12 @@ document.getElementById('btn-start').addEventListener('click', () => {
   const btn = document.getElementById('btn-start');
   const deviceToken = document.getElementById('pts-token').value.trim();
   if (!deviceToken) { log('Push-to-start token is required', 'err'); return; }
+  const channelId = document.getElementById('pts-channel').value.trim();
   apiPost('/api/push-to-start', {
     deviceToken,
     homeTeam: document.getElementById('pts-home').value.trim(),
     awayTeam: document.getElementById('pts-away').value.trim(),
+    ...(channelId ? { channelId } : {}),
   }, btn);
 });
 
@@ -92,6 +96,63 @@ document.getElementById('btn-end').addEventListener('click', () => {
   }, btn);
 });
 
+// Create channel
+document.getElementById('btn-create-channel').addEventListener('click', async () => {
+  const btn = document.getElementById('btn-create-channel');
+  const data = await apiPost('/api/channels', {}, btn);
+  if (data && data.success && data.channelId) {
+    document.getElementById('bc-channel').value = data.channelId;
+    log(`Channel created → ${data.channelId}`, 'ok');
+  }
+});
+
+// List channels
+document.getElementById('btn-list-channels').addEventListener('click', async () => {
+  const btn = document.getElementById('btn-list-channels');
+  const origText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Loading...';
+  try {
+    const res = await fetch('/api/channels');
+    const data = await res.json();
+    if (data.success) {
+      log(`Channels: ${JSON.stringify(data.channels)}`, 'ok');
+    } else {
+      log(`/api/channels → Error: ${data.error}`, 'err');
+    }
+  } catch (err) {
+    log(`/api/channels → Network error: ${err.message}`, 'err');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = origText;
+  }
+});
+
+// Delete channel
+document.getElementById('btn-delete-channel').addEventListener('click', async () => {
+  const btn = document.getElementById('btn-delete-channel');
+  const channelId = document.getElementById('bc-channel').value.trim();
+  if (!channelId) { log('Channel ID is required to delete', 'err'); return; }
+  const origText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Deleting...';
+  try {
+    const res = await fetch(`/api/channels/${encodeURIComponent(channelId)}`, { method: 'DELETE' });
+    const data = await res.json();
+    if (data.success) {
+      log(`Channel deleted → ${channelId}`, 'ok');
+      document.getElementById('bc-channel').value = '';
+    } else {
+      log(`Delete channel → Error: ${data.error}`, 'err');
+    }
+  } catch (err) {
+    log(`Delete channel → Network error: ${err.message}`, 'err');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = origText;
+  }
+});
+
 // Broadcast update
 document.getElementById('btn-broadcast').addEventListener('click', () => {
   const btn = document.getElementById('btn-broadcast');
@@ -103,6 +164,18 @@ document.getElementById('btn-broadcast').addEventListener('click', () => {
     awayScore: parseInt(document.getElementById('bc-away-score').value, 10),
     matchStatus: document.getElementById('bc-status').value,
     lastEvent: document.getElementById('bc-event').value.trim(),
+  }, btn);
+});
+
+// Broadcast end
+document.getElementById('btn-broadcast-end').addEventListener('click', () => {
+  const btn = document.getElementById('btn-broadcast-end');
+  const channelId = document.getElementById('bc-channel').value.trim();
+  if (!channelId) { log('Broadcast channel ID is required', 'err'); return; }
+  apiPost('/api/broadcast-end', {
+    channelId,
+    homeScore: parseInt(document.getElementById('bc-home-score').value, 10),
+    awayScore: parseInt(document.getElementById('bc-away-score').value, 10),
   }, btn);
 });
 

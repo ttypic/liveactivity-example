@@ -37,6 +37,10 @@
           <input type="text" id="pts-away" value="Chelsea">
         </div>
       </div>
+      <div class="field">
+        <label for="pts-channel">Broadcast Channel ID <span class="tag tag-purple">optional · iOS 18+</span></label>
+        <input type="text" id="pts-channel" placeholder="Optional: start subscribed to this broadcast channel">
+      </div>
       <button class="btn primary" id="btn-start">Start Live Activity Remotely</button>
     </section>
 
@@ -83,12 +87,17 @@
     <section class="card">
       <div class="card-header">
         <h2>Broadcast Update</h2>
-        <span class="tag tag-purple">iOS 17.2+</span>
+        <span class="tag tag-purple">iOS 18+</span>
       </div>
-      <p class="hint">Send an update via an APNS broadcast channel. All subscribed Live Activities update simultaneously — no individual tokens needed.</p>
+      <p class="hint">Send an update via an APNS broadcast channel. All subscribed Live Activities update simultaneously — no individual tokens needed. Create a channel here, then have the iOS app subscribe to it.</p>
+      <div class="btn-row">
+        <button class="btn primary" id="btn-create-channel">Create Channel</button>
+        <button class="btn ghost small" id="btn-list-channels">List Channels</button>
+        <button class="btn danger" id="btn-delete-channel">Delete Channel</button>
+      </div>
       <div class="field">
         <label for="bc-channel">Broadcast Channel ID</label>
-        <input type="text" id="bc-channel" placeholder="Paste broadcast channel ID from iOS app">
+        <input type="text" id="bc-channel" placeholder="Create a channel above, or paste an existing channel ID">
       </div>
       <div class="row-3">
         <div class="field">
@@ -112,7 +121,10 @@
         <label for="bc-event">Last Event</label>
         <input type="text" id="bc-event" placeholder="e.g. Goal by Palmer (67')">
       </div>
-      <button class="btn primary" id="btn-broadcast">Send Broadcast Update</button>
+      <div class="btn-row">
+        <button class="btn primary" id="btn-broadcast">Send Broadcast Update</button>
+        <button class="btn danger" id="btn-broadcast-end">End Broadcast</button>
+      </div>
     </section>
 
     <!-- Log -->

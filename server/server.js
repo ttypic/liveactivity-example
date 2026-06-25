@@ -27,12 +27,12 @@ app.get('/api/config', (req, res) => {
 
 // Push-to-start: starts a new Live Activity on the device
 app.post('/api/push-to-start', async (req, res) => {
-  const { deviceToken, homeTeam, awayTeam } = req.body;
+  const { deviceToken, homeTeam, awayTeam, channelId } = req.body;
   if (!deviceToken || !homeTeam || !awayTeam) {
     return res.status(400).json({ error: 'deviceToken, homeTeam and awayTeam are required' });
   }
   try {
-    await apns.pushToStart({ deviceToken, homeTeam, awayTeam });
+    await apns.pushToStart({ deviceToken, homeTeam, awayTeam, channelId });
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -67,7 +67,41 @@ app.post('/api/end-activity', async (req, res) => {
   }
 });
 
-// Broadcast update via APNS channel (iOS 17.2+)
+// Create a broadcast channel
+app.post('/api/channels', async (req, res) => {
+  try {
+    const { channelId } = await apns.createChannel();
+    res.json({ success: true, channelId });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// List broadcast channels
+app.get('/api/channels', async (req, res) => {
+  try {
+    const { channels } = await apns.listChannels();
+    res.json({ success: true, channels });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Delete a broadcast channel
+app.delete('/api/channels/:channelId', async (req, res) => {
+  const { channelId } = req.params;
+  if (!channelId) {
+    return res.status(400).json({ error: 'channelId is required' });
+  }
+  try {
+    await apns.deleteChannel({ channelId });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Broadcast update via APNS channel (iOS 18+)
 app.post('/api/broadcast-update', async (req, res) => {
   const { channelId, homeScore, awayScore, matchStatus, lastEvent } = req.body;
   if (!channelId) {
@@ -75,6 +109,20 @@ app.post('/api/broadcast-update', async (req, res) => {
   }
   try {
     await apns.broadcastUpdate({ channelId, homeScore, awayScore, matchStatus, lastEvent });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Broadcast end via APNS channel (iOS 18+)
+app.post('/api/broadcast-end', async (req, res) => {
+  const { channelId, homeScore, awayScore } = req.body;
+  if (!channelId) {
+    return res.status(400).json({ error: 'channelId is required' });
+  }
+  try {
+    await apns.broadcastEnd({ channelId, homeScore, awayScore });
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
