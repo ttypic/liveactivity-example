@@ -4,18 +4,47 @@ require('dotenv').config();
 const express = require('express');
 const path = require('node:path');
 const AblyLiveActivity = require('./ably-live-activity');
+const { buildApnsConfig, createSandboxApp } = require('./ably-sandbox');
 
 const app = express();
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-const liveActivity = new AblyLiveActivity({ apiKey: process.env.ABLY_API_KEY });
+// Resolved during bootstrap() before the server starts listening.
+let liveActivity;
+let mode = 'configured';
+let appId;
+
+// Use ABLY_API_KEY when provided; otherwise create an ephemeral Ably sandbox
+// app and configure its APNS credentials from the Apple env vars.
+async function bootstrap() {
+  if (process.env.ABLY_API_KEY) {
+    liveActivity = new AblyLiveActivity({ apiKey: process.env.ABLY_API_KEY });
+    mode = 'configured';
+    return;
+  }
+
+  const apns = buildApnsConfig();
+  if (!apns) {
+    throw new Error(
+      'Sandbox mode needs APNS credentials: set APPLE_KEY_PATH (.p8), APPLE_KEY_ID, ' +
+        'APPLE_TEAM_ID and APPLE_BUNDLE_ID in server/.env (or set ABLY_API_KEY to skip sandbox).'
+    );
+  }
+  const created = await createSandboxApp(apns);
+  appId = created.appId;
+  console.log(`Created Ably sandbox app ${created.appId} (endpoint ${created.endpoint}) ${created.key.keyStr}`);
+  liveActivity = new AblyLiveActivity({ apiKey: created.key, endpoint: created.endpoint });
+  mode = 'sandbox';
+}
 
 // Config for the dashboard UI
 app.get('/api/config', (req, res) => {
   res.json({
     bundleId: process.env.APPLE_BUNDLE_ID,
     apnsEnv: process.env.APNS_ENV || 'sandbox',
+    mode,
+    appId,
   });
 });
 
@@ -80,9 +109,16 @@ app.post('/api/live-activity/end', async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-const server = app.listen(PORT, () => {
-  console.log(`Dashboard running at http://localhost:${PORT}`);
-});
 
-process.on('SIGTERM', () => server.close());
-process.on('SIGINT', () => server.close());
+bootstrap()
+  .then(() => {
+    const server = app.listen(PORT, () => {
+      console.log(`Dashboard running at http://localhost:${PORT} (mode: ${mode})`);
+    });
+    process.on('SIGTERM', () => server.close());
+    process.on('SIGINT', () => server.close());
+  })
+  .catch((err) => {
+    console.error('Failed to start server:', err.message);
+    process.exit(1);
+  });

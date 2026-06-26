@@ -19,8 +19,9 @@ const Ably = require('ably');
 // so the iOS `MatchAttributes` contract is unchanged. Ably passes them to APNs
 // as-is.
 class AblyLiveActivity {
-  constructor({ apiKey }) {
+  constructor({ apiKey, endpoint }) {
     this.apiKey = apiKey;
+    this.endpoint = endpoint;
     this._rest = null;
   }
 
@@ -31,7 +32,12 @@ class AblyLiveActivity {
       if (!this.apiKey) {
         throw new Error('ABLY_API_KEY is not set — add it to server/.env');
       }
-      this._rest = new Ably.Rest({ key: this.apiKey });
+      this._rest = new Ably.Rest({
+        key: this.apiKey.keyStr,
+        useBinaryProtocol: false,
+        logLevel: 4,
+        ...(this.endpoint ? { endpoint: this.endpoint } : {}),
+      });
     }
     return this._rest;
   }
@@ -68,6 +74,7 @@ class AblyLiveActivity {
       recipient: { channels, ...(deviceId ? { deviceId } : {}) },
       apnsBroadcast,
       apns,
+      headers: { 'apns-priority': 10 },
     });
   }
 
@@ -89,7 +96,10 @@ class AblyLiveActivity {
     return this.rest.push.admin.liveActivity.update({
       apnsBroadcast,
       apns,
-      headers: { 'apns-priority': 10 },
+      headers: {
+        'apns-priority': '10',
+        'apns-expiration': String(Math.floor(Date.now() / 1000) + 3600),
+      }
     });
   }
 

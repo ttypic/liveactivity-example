@@ -102,12 +102,30 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 | Variable | Where to find it |
 |---|---|
-| `ABLY_API_KEY` | Ably dashboard → your app → API Keys (needs Push Admin) |
+| `ABLY_API_KEY` | Ably dashboard → your app → API Keys (needs Push Admin). **Optional** — unset it to use sandbox mode (below) |
 | `APPLE_BUNDLE_ID` | The bundle ID you set in Xcode (shown in the dashboard badge) |
 | `APNS_ENV` | `sandbox`/`production` (shown in the dashboard badge) |
 
-`APPLE_TEAM_ID`, `APPLE_KEY_ID`, `APPLE_KEY_PATH` are no longer used by the server
-(the APNS key now lives in Ably); they remain only for the legacy `apns.js` helper.
+### Sandbox mode (no Ably account)
+
+If you leave `ABLY_API_KEY` **unset**, the server bootstraps a throwaway Ably
+**sandbox** app on startup and connects to it via `endpoint: "nonprod:sandbox"`:
+
+1. It creates a test app at `https://sandbox.realtime.ably-nonprod.net/apps`
+   (using the shared `ably-common` test-app spec, with an inline fallback if that
+   can't be fetched).
+2. It configures your Apple APNS auth key as APNS **token** auth in the same
+   create call — sending `apnsSigningKey` (the `.p8` from `APPLE_KEY_PATH`),
+   `apnsSigningKeyId` (`APPLE_KEY_ID`), `apnsIssuerKey` (`APPLE_TEAM_ID`),
+   `apnsTopicHeader` (`APPLE_BUNDLE_ID`) and `apnsUseSandboxEndpoint` (from `APNS_ENV`).
+3. The minted key is used for the rest of the session.
+
+The created app is ephemeral. On startup you'll see
+`Created Ably sandbox app <appId> (endpoint nonprod:sandbox)`, and `GET /api/config`
+reports `mode: "sandbox"`. In this mode the `APPLE_*` vars are **required** (they
+supply the APNS credentials); in configured mode (`ABLY_API_KEY` set) the APNS key
+instead lives in your Ably app's Push settings and the `APPLE_*` vars are only
+used by the legacy `apns.js` helper.
 
 ---
 
