@@ -48,6 +48,18 @@ app.get('/api/config', (req, res) => {
   });
 });
 
+// Ably token auth endpoint. The iOS app points its Ably `authUrl` here; we
+// return a signed TokenRequest so the device can authenticate (and activate
+// itself for Live Activity push-to-start) without ever seeing the API key.
+app.get('/api/auth', async (req, res) => {
+  try {
+    const tokenRequest = await liveActivity.createTokenRequest({ clientId: req.query.clientId });
+    res.json(tokenRequest);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Create an APNs broadcast channel via Ably.
 // Returns the Ably broadcast `id` (used for start/update/end) and the
 // `apnsChannelId` the iOS app subscribes to.

@@ -2,10 +2,13 @@ import SwiftUI
 
 struct LiveActivityControlView: View {
     let manager: LiveActivityManager
+    let pushManager: AblyPushManager
 
     @State private var homeTeam = "Arsenal"
     @State private var awayTeam = "Chelsea"
     @State private var channelId = ""
+    @State private var serverURL = "http://Evgeniis-MacBook-Pro.local:3000"
+    @State private var isSandbox = false
 
     var body: some View {
         Form {
@@ -62,6 +65,67 @@ struct LiveActivityControlView: View {
                         token: manager.pushToStartToken,
                         placeholder: "Waiting for token..."
                     )
+                }
+            }
+
+            Section("Ably Push Activation") {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Register this device's push-to-start token with Ably so it can be push-to-started via broadcast. Authenticates against the server's authUrl token endpoint — no API key on the device.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    TextField("Server URL", text: $serverURL)
+                        .font(.system(.caption, design: .monospaced))
+                        .autocorrectionDisabled()
+                        .textInputAutocapitalization(.never)
+                        .keyboardType(.URL)
+                        .disabled(pushManager.isActivated || pushManager.isActivating)
+                }
+                Toggle("Sandbox environment", isOn: $isSandbox)
+                    .disabled(pushManager.isActivated || pushManager.isActivating)
+
+                if pushManager.isActivated {
+                    Label("Device Activated", systemImage: "checkmark.seal.fill")
+                        .foregroundStyle(.green)
+                    if let id = pushManager.deviceId {
+                        Text("Device ID: \(id)")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    Button("Deactivate Device", role: .destructive) {
+                        pushManager.deactivate()
+                    }
+                } else {
+                    Button {
+                        if let token = manager.pushToStartToken {
+                            pushManager.activate(serverBaseURL: serverURL, pushToStartToken: token, sandbox: isSandbox)
+                        }
+                    } label: {
+                        HStack {
+                            Text("Activate Device with Ably")
+                            if pushManager.isActivating {
+                                Spacer()
+                                ProgressView()
+                            }
+                        }
+                    }
+                    .disabled(manager.pushToStartToken == nil || pushManager.isActivating)
+
+                    if manager.pushToStartToken == nil {
+                        Text("Waiting for a push-to-start token from iOS…")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
+                if let status = pushManager.statusMessage {
+                    Text(status)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                if let error = pushManager.errorMessage {
+                    Label(error, systemImage: "exclamationmark.triangle.fill")
+                        .font(.caption)
+                        .foregroundStyle(.red)
                 }
             }
 

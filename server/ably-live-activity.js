@@ -48,6 +48,19 @@ class AblyLiveActivity {
     return this.rest.push.admin.createApnsBroadcast({ messageStoragePolicy: 1 });
   }
 
+  // Mint a signed Ably TokenRequest for a client (the iOS app), used as the
+  // response to its `authUrl`. The capability includes `push-subscribe` so the
+  // device can activate/register itself for push (Live Activity push-to-start)
+  // and subscribe to channels; the API key stays on the server.
+  createTokenRequest({ clientId } = {}) {
+    return this.rest.auth.createTokenRequest({
+      ...(clientId ? { clientId } : {}),
+      capability: JSON.stringify({
+        '*': ['subscribe', 'publish', 'presence', 'history', 'push-subscribe'],
+      }),
+    });
+  }
+
   // Push-to-start a new Live Activity on every device subscribed to one of the
   // given Ably channels (using their Ably-registered push-to-start tokens).
   start({ channels, deviceId, apnsBroadcast, homeTeam, awayTeam }) {

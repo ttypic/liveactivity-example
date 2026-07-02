@@ -10,6 +10,7 @@
 		5C51CCD82F72A92A0085A93C /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5C51CCD72F72A92A0085A93C /* WidgetKit.framework */; };
 		5C51CCDA2F72A92A0085A93C /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5C51CCD92F72A92A0085A93C /* SwiftUI.framework */; };
 		5C51CCEB2F72A92C0085A93C /* MatchScoreWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 5C51CCD52F72A92A0085A93C /* MatchScoreWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		AB1E000000000000000000A3 /* Ably in Frameworks */ = {isa = PBXBuildFile; productRef = AB1E000000000000000000A2 /* Ably */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -110,6 +111,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AB1E000000000000000000A3 /* Ably in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -193,6 +195,7 @@
 			);
 			name = LiveActivityExample;
 			packageProductDependencies = (
+				AB1E000000000000000000A2 /* Ably */,
 			);
 			productName = LiveActivityExample;
 			productReference = 5C51CCA72F72A8B80085A93C /* LiveActivityExample.app */;
@@ -302,6 +305,9 @@
 			);
 			mainGroup = 5C51CC9E2F72A8B80085A93C;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				AB1E000000000000000000A1 /* XCRemoteSwiftPackageReference "ably-cocoa" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 5C51CCA82F72A8B80085A93C /* Products */;
 			projectDirPath = "";
@@ -755,6 +761,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		AB1E000000000000000000A1 /* XCRemoteSwiftPackageReference "ably-cocoa" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/ably/ably-cocoa";
+			requirement = {
+				branch = "AIT-465/liveactivity-pts-activation";
+				kind = branch;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		AB1E000000000000000000A2 /* Ably */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AB1E000000000000000000A1 /* XCRemoteSwiftPackageReference "ably-cocoa" */;
+			productName = Ably;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 5C51CC9F2F72A8B80085A93C /* Project object */;
 }
