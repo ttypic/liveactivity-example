@@ -5,6 +5,7 @@ struct LiveActivityControlView: View {
 
     @State private var homeTeam = "Arsenal"
     @State private var awayTeam = "Chelsea"
+    @State private var channelId = ""
 
     var body: some View {
         Form {
@@ -27,8 +28,27 @@ struct LiveActivityControlView: View {
                     }
                 } else {
                     Button("Start Live Activity Locally") {
-                        Task { await manager.startActivity(homeTeam: homeTeam, awayTeam: awayTeam) }
+                        Task {
+                            await manager.startActivity(
+                                homeTeam: homeTeam,
+                                awayTeam: awayTeam,
+                                channelId: channelId
+                            )
+                        }
                     }
+                }
+            }
+
+            Section("Broadcast Channel (optional)") {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Paste an APNS broadcast channel ID to subscribe this locally-started activity to it, so it can be updated via broadcast. Leave empty to use a per-activity push token.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    TextField("APNS Channel ID", text: $channelId)
+                        .font(.system(.caption, design: .monospaced))
+                        .autocorrectionDisabled()
+                        .textInputAutocapitalization(.never)
+                        .disabled(manager.isActivityRunning)
                 }
             }
 

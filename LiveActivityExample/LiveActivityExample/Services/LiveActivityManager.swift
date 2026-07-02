@@ -24,7 +24,11 @@ final class LiveActivityManager {
 
     // MARK: - Start Activity Locally
 
-    func startActivity(homeTeam: String, awayTeam: String) async {
+    // Start a Live Activity directly from the app via ActivityKit.
+    // When `channelId` is non-empty the activity subscribes to that APNS
+    // broadcast channel (`pushType: .channel`) so it can be updated via
+    // broadcast; otherwise it uses a per-activity push token (`.token`).
+    func startActivity(homeTeam: String, awayTeam: String, channelId: String? = nil) async {
         let attributes = MatchAttributes(homeTeam: homeTeam, awayTeam: awayTeam)
         let initialState = MatchAttributes.ContentState(
             homeScore: 0,
@@ -34,11 +38,16 @@ final class LiveActivityManager {
         )
         let content = ActivityContent(state: initialState, staleDate: nil)
 
+        let trimmedChannel = channelId?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let pushType: PushType = (trimmedChannel?.isEmpty == false)
+            ? .channel(trimmedChannel!)
+            : .token
+
         do {
             let activity = try Activity.request(
                 attributes: attributes,
                 content: content,
-                pushType: .token
+                pushType: pushType
             )
             await MainActor.run { self.currentActivity = activity }
             observeActivityTokens(activity: activity)
