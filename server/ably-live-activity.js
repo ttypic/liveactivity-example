@@ -61,9 +61,15 @@ class AblyLiveActivity {
     });
   }
 
-  // Push-to-start a new Live Activity on every device subscribed to one of the
-  // given Ably channels (using their Ably-registered push-to-start tokens).
+  // Push-to-start a new Live Activity. Targets either the devices subscribed to
+  // the given Ably channels, a specific Ably deviceId, or both.
   start({ channels, deviceId, apnsBroadcast, homeTeam, awayTeam }) {
+    const hasChannels = Array.isArray(channels) && channels.length > 0;
+    const recipient = {
+      ...(hasChannels ? { channels } : {}),
+      ...(deviceId ? { deviceId } : {}),
+    };
+
     const apns = {
       aps: {
         timestamp: Math.floor(Date.now() / 1000),
@@ -84,7 +90,7 @@ class AblyLiveActivity {
     };
 
     return this.rest.push.admin.liveActivity.start({
-      recipient: { channels, ...(deviceId ? { deviceId } : {}) },
+      recipient,
       apnsBroadcast,
       apns,
       headers: { 'apns-priority': 10 },

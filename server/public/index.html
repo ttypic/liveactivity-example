@@ -40,10 +40,14 @@
         <h2>Start Live Activity</h2>
         <span class="tag">Push-to-Start</span>
       </div>
-      <p class="hint">Push-to-start a Live Activity on every device subscribed to the given Ably channel(s), using the Broadcast ID above. <strong>Note:</strong> this requires the iOS app to be registered with Ably push and subscribed to that Ably channel — not yet wired in this example app.</p>
+      <p class="hint">Push-to-start a Live Activity, targeting either Ably channel(s) that devices are subscribed to, or a specific Ably device by its ID (shown in the app after activation), using the Broadcast ID above. Provide at least one.</p>
       <div class="field">
         <label for="start-channels">Ably Channel(s) <span class="tag">comma-separated</span></label>
         <input type="text" id="start-channels" placeholder="e.g. matches:arsenal-chelsea">
+      </div>
+      <div class="field">
+        <label for="start-device-id">Ably Device ID <span class="tag">optional</span></label>
+        <input type="text" id="start-device-id" placeholder="Paste the device ID from the app after activation">
       </div>
       <div class="row-2">
         <div class="field">

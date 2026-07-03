@@ -9,6 +9,7 @@ struct LiveActivityControlView: View {
     @State private var channelId = ""
     @State private var serverURL = "http://Evgeniis-MacBook-Pro.local:3000"
     @State private var isSandbox = false
+    @State private var pushChannel = ""
 
     var body: some View {
         Form {
@@ -86,11 +87,34 @@ struct LiveActivityControlView: View {
                 if pushManager.isActivated {
                     Label("Device Activated", systemImage: "checkmark.seal.fill")
                         .foregroundStyle(.green)
-                    if let id = pushManager.deviceId {
-                        Text("Device ID: \(id)")
+                    TokenDisplayView(
+                        label: "Device ID",
+                        token: pushManager.deviceId,
+                        placeholder: "Unavailable"
+                    )
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Subscribe this device to an Ably channel so the server can push-to-start it by channel name.")
                             .font(.caption)
                             .foregroundStyle(.secondary)
+                        HStack {
+                            TextField("Ably channel name", text: $pushChannel)
+                                .font(.system(.caption, design: .monospaced))
+                                .autocorrectionDisabled()
+                                .textInputAutocapitalization(.never)
+                            Button("Subscribe") {
+                                pushManager.subscribe(toChannel: pushChannel)
+                            }
+                            .buttonStyle(.borderless)
+                            .disabled(pushChannel.trimmingCharacters(in: .whitespaces).isEmpty)
+                        }
+                        if let channel = pushManager.subscribedChannel {
+                            Label("Subscribed to \(channel)", systemImage: "dot.radiowaves.left.and.right")
+                                .font(.caption)
+                                .foregroundStyle(.green)
+                        }
                     }
+
                     Button("Deactivate Device", role: .destructive) {
                         pushManager.deactivate()
                     }

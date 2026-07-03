@@ -78,8 +78,9 @@ app.post('/api/live-activity/start', async (req, res) => {
   if (!apnsBroadcast) {
     return res.status(400).json({ error: 'apnsBroadcast is required' });
   }
-  if (!Array.isArray(channels) || channels.length === 0) {
-    return res.status(400).json({ error: 'at least one channel is required' });
+  const hasChannels = Array.isArray(channels) && channels.length > 0;
+  if (!hasChannels && !deviceId) {
+    return res.status(400).json({ error: 'at least one channel or a deviceId is required' });
   }
   if (!homeTeam || !awayTeam) {
     return res.status(400).json({ error: 'homeTeam and awayTeam are required' });

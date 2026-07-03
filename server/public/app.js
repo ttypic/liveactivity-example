@@ -76,10 +76,15 @@ document.getElementById('btn-start').addEventListener('click', () => {
     .split(',')
     .map((c) => c.trim())
     .filter(Boolean);
-  if (channels.length === 0) { log('At least one Ably channel is required', 'err'); return; }
+  const deviceId = document.getElementById('start-device-id').value.trim();
+  if (channels.length === 0 && !deviceId) {
+    log('Provide at least one Ably channel or a device ID', 'err');
+    return;
+  }
   apiPost('/api/live-activity/start', {
     apnsBroadcast,
     channels,
+    ...(deviceId ? { deviceId } : {}),
     homeTeam: document.getElementById('start-home').value.trim(),
     awayTeam: document.getElementById('start-away').value.trim(),
   }, btn);
