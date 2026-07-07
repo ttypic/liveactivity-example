@@ -25,16 +25,23 @@ final class AblyPushManager: NSObject, ARTPushRegistererDelegate {
     // Retained for the lifetime of the activation so its push registerer
     // delegate (self) stays wired and the device state persists.
     private var rest: ARTRest?
-    // Held until the device is activated, then registered with Ably.
-    private var pendingPushToStartToken: String?
+    // Held until the device is activated, then registered with Ably. The
+    // ably-cocoa API takes the raw token bytes (Data), not the hex string.
+    private var pendingPushToStartToken: Data?
 
     // Activate the device with Ably, then register the push-to-start token.
     // `serverBaseURL` is the base of the dashboard server (its `/api/auth`
     // endpoint mints the Ably TokenRequest consumed via authUrl).
+    // `pushToStartToken` is the hex string surfaced in the UI; it is converted
+    // back to the raw Data the SDK expects.
     func activate(serverBaseURL: String, pushToStartToken: String, sandbox: Bool) {
         let base = serverBaseURL.trimmingCharacters(in: .whitespacesAndNewlines)
         guard let authUrl = URL(string: "\(base)/api/auth") else {
             errorMessage = "Invalid server URL"
+            return
+        }
+        guard let tokenData = Data(hexString: pushToStartToken) else {
+            errorMessage = "Invalid push-to-start token"
             return
         }
 
@@ -49,7 +56,7 @@ final class AblyPushManager: NSObject, ARTPushRegistererDelegate {
         }
         let rest = ARTRest(options: options)
         self.rest = rest
-        self.pendingPushToStartToken = pushToStartToken
+        self.pendingPushToStartToken = tokenData
         Self.shared = self
 
         isActivating = true
@@ -163,5 +170,24 @@ final class AblyPushManager: NSObject, ARTPushRegistererDelegate {
             self.isActivating = false
             self.errorMessage = "Registration failed: \(error?.message ?? "unknown error")"
         }
+    }
+}
+
+private extension Data {
+    /// Build `Data` from a hex string (the inverse of the `%02x` encoding used
+    /// to display the push-to-start token). Returns nil if the string isn't
+    /// valid hex.
+    init?(hexString: String) {
+        let hex = hexString.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !hex.isEmpty, hex.count % 2 == 0 else { return nil }
+        var bytes = Data(capacity: hex.count / 2)
+        var index = hex.startIndex
+        while index < hex.endIndex {
+            let next = hex.index(index, offsetBy: 2)
+            guard let byte = UInt8(hex[index..<next], radix: 16) else { return nil }
+            bytes.append(byte)
+            index = next
+        }
+        self = bytes
     }
 }
