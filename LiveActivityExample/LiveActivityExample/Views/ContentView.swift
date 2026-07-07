@@ -7,7 +7,7 @@ struct ContentView: View {
     var body: some View {
         NavigationStack {
             LiveActivityControlView(manager: manager, pushManager: pushManager)
-                .navigationTitle("Live Activity Demo")
+                .navigationTitle("NBA Live Activity")
                 .navigationBarTitleDisplayMode(.large)
         }
         .task {

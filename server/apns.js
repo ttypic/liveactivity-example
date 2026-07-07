@@ -122,14 +122,16 @@ class APNSClient {
         'content-state': {
           homeScore: 0,
           awayScore: 0,
-          matchStatus: 'upcoming',
-          lastEvent: 'Match about to begin',
+          gameStatus: 'scheduled',
+          period: 'Q1',
+          clock: '12:00',
+          lastPlay: 'Tip-off soon',
         },
-        'attributes-type': 'MatchAttributes',
+        'attributes-type': 'GameAttributes',
         attributes: { homeTeam, awayTeam },
         alert: {
           title: `${homeTeam} vs ${awayTeam}`,
-          body: 'A match is starting!',
+          body: 'Game starting!',
         },
       },
     };
@@ -146,7 +148,7 @@ class APNSClient {
   }
 
   // Update a running Live Activity via its push token
-  updateActivity({ activityToken, homeScore, awayScore, matchStatus, lastEvent }) {
+  updateActivity({ activityToken, homeScore, awayScore, gameStatus, period, clock, lastPlay }) {
     const payload = {
       aps: {
         timestamp: Math.floor(Date.now() / 1000),
@@ -154,8 +156,10 @@ class APNSClient {
         'content-state': {
           homeScore: homeScore ?? 0,
           awayScore: awayScore ?? 0,
-          matchStatus: matchStatus ?? 'live',
-          lastEvent: lastEvent ?? '',
+          gameStatus: gameStatus ?? 'live',
+          period: period ?? 'Q1',
+          clock: clock ?? '',
+          lastPlay: lastPlay ?? '',
         },
       },
     };
@@ -180,8 +184,10 @@ class APNSClient {
         'content-state': {
           homeScore: homeScore ?? 0,
           awayScore: awayScore ?? 0,
-          matchStatus: 'finished',
-          lastEvent: 'Full time!',
+          gameStatus: 'finished',
+          period: 'Final',
+          clock: '',
+          lastPlay: 'Final',
         },
         'dismissal-date': Math.floor(Date.now() / 1000) + 3600,
       },
@@ -244,7 +250,7 @@ class APNSClient {
 
   // Broadcast an update to every Live Activity subscribed to the channel.
   // No apns-topic header for broadcasts; the channel id is sent in apns-channel-id.
-  broadcastUpdate({ channelId, homeScore, awayScore, matchStatus, lastEvent }) {
+  broadcastUpdate({ channelId, homeScore, awayScore, gameStatus, period, clock, lastPlay }) {
     const payload = {
       aps: {
         timestamp: Math.floor(Date.now() / 1000),
@@ -252,8 +258,10 @@ class APNSClient {
         'content-state': {
           homeScore: homeScore ?? 0,
           awayScore: awayScore ?? 0,
-          matchStatus: matchStatus ?? 'live',
-          lastEvent: lastEvent ?? '',
+          gameStatus: gameStatus ?? 'live',
+          period: period ?? 'Q1',
+          clock: clock ?? '',
+          lastPlay: lastPlay ?? '',
         },
       },
     };
@@ -281,8 +289,10 @@ class APNSClient {
         'content-state': {
           homeScore: homeScore ?? 0,
           awayScore: awayScore ?? 0,
-          matchStatus: 'finished',
-          lastEvent: 'Full time!',
+          gameStatus: 'finished',
+          period: 'Final',
+          clock: '',
+          lastPlay: 'Final',
         },
         'dismissal-date': Math.floor(Date.now() / 1000) + 3600,
       },

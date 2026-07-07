@@ -15,9 +15,9 @@ const Ably = require('ably');
 //   3. update() : single push fanned out by APNs to all subscribed devices.
 //   4. end()    : ends the activity everywhere and invalidates the broadcast id.
 //
-// The `apns` payloads mirror the shapes the previous direct-APNs client built,
-// so the iOS `MatchAttributes` contract is unchanged. Ably passes them to APNs
-// as-is.
+// The `apns` payloads mirror the iOS `GameAttributes` contract (an NBA
+// basketball game: teams, points, status, period, clock, last play). Ably
+// passes them to APNs as-is.
 class AblyLiveActivity {
   constructor({ apiKey, endpoint }) {
     this.apiKey = apiKey;
@@ -63,7 +63,7 @@ class AblyLiveActivity {
 
   // Push-to-start a new Live Activity. Targets either the devices subscribed to
   // the given Ably channels, a specific Ably deviceId, or both.
-  start({ channels, deviceId, apnsBroadcast, homeTeam, awayTeam }) {
+  start({ channels, deviceId, apnsBroadcast, apnsChannelId, homeTeam, awayTeam }) {
     const hasChannels = Array.isArray(channels) && channels.length > 0;
     const recipient = {
       ...(hasChannels ? { channels } : {}),
@@ -74,17 +74,20 @@ class AblyLiveActivity {
       aps: {
         timestamp: Math.floor(Date.now() / 1000),
         event: 'start',
+        'input-push-channel': apnsChannelId,
         'content-state': {
           homeScore: 0,
           awayScore: 0,
-          matchStatus: 'upcoming',
-          lastEvent: 'Match about to begin',
+          gameStatus: 'scheduled',
+          period: 'Q1',
+          clock: '12:00',
+          lastPlay: 'Tip-off soon',
         },
-        'attributes-type': 'MatchAttributes',
+        'attributes-type': 'GameAttributes',
         attributes: { homeTeam, awayTeam },
         alert: {
           title: `${homeTeam} vs ${awayTeam}`,
-          body: 'A match is starting!',
+          body: 'Game starting!',
         },
       },
     };
@@ -98,7 +101,7 @@ class AblyLiveActivity {
   }
 
   // Broadcast a content-state update to all subscribed activities.
-  update({ apnsBroadcast, homeScore, awayScore, matchStatus, lastEvent }) {
+  update({ apnsBroadcast, homeScore, awayScore, gameStatus, period, clock, lastPlay }) {
     const apns = {
       aps: {
         timestamp: Math.floor(Date.now() / 1000),
@@ -106,8 +109,10 @@ class AblyLiveActivity {
         'content-state': {
           homeScore: homeScore ?? 0,
           awayScore: awayScore ?? 0,
-          matchStatus: matchStatus ?? 'live',
-          lastEvent: lastEvent ?? '',
+          gameStatus: gameStatus ?? 'live',
+          period: period ?? 'Q1',
+          clock: clock ?? '',
+          lastPlay: lastPlay ?? '',
         },
       },
     };
@@ -131,8 +136,10 @@ class AblyLiveActivity {
         'content-state': {
           homeScore: homeScore ?? 0,
           awayScore: awayScore ?? 0,
-          matchStatus: 'finished',
-          lastEvent: 'Full time!',
+          gameStatus: 'finished',
+          period: 'Final',
+          clock: '',
+          lastPlay: 'Final',
         },
         'dismissal-date': Math.floor(Date.now() / 1000) + 3600,
       },
@@ -141,7 +148,7 @@ class AblyLiveActivity {
     return this.rest.push.admin.liveActivity.end({
       apnsBroadcast,
       apns,
-      headers: { 'apns-priority': 10 },
+      headers: { 'apns-priority': '10' },
     });
   }
 }

@@ -3,7 +3,7 @@ import Foundation
 
 @Observable
 final class LiveActivityManager {
-    var currentActivity: Activity<MatchAttributes>?
+    var currentActivity: Activity<GameAttributes>?
     var activityUpdateToken: String?
     var pushToStartToken: String?
     var errorMessage: String?
@@ -15,7 +15,7 @@ final class LiveActivityManager {
 
     func observePushToStartToken() {
         Task {
-            for await tokenData in Activity<MatchAttributes>.pushToStartTokenUpdates {
+            for await tokenData in Activity<GameAttributes>.pushToStartTokenUpdates {
                 let token = tokenData.map { String(format: "%02x", $0) }.joined()
                 await MainActor.run { self.pushToStartToken = token }
             }
@@ -29,12 +29,14 @@ final class LiveActivityManager {
     // broadcast channel (`pushType: .channel`) so it can be updated via
     // broadcast; otherwise it uses a per-activity push token (`.token`).
     func startActivity(homeTeam: String, awayTeam: String, channelId: String? = nil) async {
-        let attributes = MatchAttributes(homeTeam: homeTeam, awayTeam: awayTeam)
-        let initialState = MatchAttributes.ContentState(
+        let attributes = GameAttributes(homeTeam: homeTeam, awayTeam: awayTeam)
+        let initialState = GameAttributes.ContentState(
             homeScore: 0,
             awayScore: 0,
-            matchStatus: .upcoming,
-            lastEvent: "Match about to begin"
+            gameStatus: .scheduled,
+            period: "Q1",
+            clock: "12:00",
+            lastPlay: "Tip-off soon"
         )
         let content = ActivityContent(state: initialState, staleDate: nil)
 
@@ -58,7 +60,7 @@ final class LiveActivityManager {
 
     // MARK: - Token Observation
 
-    private func observeActivityTokens(activity: Activity<MatchAttributes>) {
+    private func observeActivityTokens(activity: Activity<GameAttributes>) {
         Task {
             for await tokenData in activity.pushTokenUpdates {
                 let token = tokenData.map { String(format: "%02x", $0) }.joined()
@@ -71,11 +73,13 @@ final class LiveActivityManager {
 
     func endActivity() async {
         guard let activity = currentActivity else { return }
-        let finalState = MatchAttributes.ContentState(
+        let finalState = GameAttributes.ContentState(
             homeScore: activity.content.state.homeScore,
             awayScore: activity.content.state.awayScore,
-            matchStatus: .finished,
-            lastEvent: "Full time!"
+            gameStatus: .finished,
+            period: "Final",
+            clock: "",
+            lastPlay: "Final"
         )
         let finalContent = ActivityContent(state: finalState, staleDate: nil)
         await activity.end(finalContent, dismissalPolicy: .after(.now + 300))
@@ -88,7 +92,7 @@ final class LiveActivityManager {
     // MARK: - Restore on App Launch
 
     func restoreExistingActivities() {
-        for activity in Activity<MatchAttributes>.activities {
+        for activity in Activity<GameAttributes>.activities {
             currentActivity = activity
             observeActivityTokens(activity: activity)
             break

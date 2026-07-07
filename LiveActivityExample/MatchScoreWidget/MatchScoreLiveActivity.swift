@@ -2,9 +2,9 @@ import ActivityKit
 import SwiftUI
 import WidgetKit
 
-struct MatchScoreLiveActivity: Widget {
+struct GameScoreLiveActivity: Widget {
     var body: some WidgetConfiguration {
-        ActivityConfiguration(for: MatchAttributes.self) { context in
+        ActivityConfiguration(for: GameAttributes.self) { context in
             LockScreenView(context: context)
                 .activityBackgroundTint(Color.black.opacity(0.85))
                 .activitySystemActionForegroundColor(.white)
@@ -25,10 +25,16 @@ struct MatchScoreLiveActivity: Widget {
                     )
                 }
                 DynamicIslandExpandedRegion(.center) {
-                    StatusBadge(status: context.state.matchStatus)
+                    VStack(spacing: 2) {
+                        StatusBadge(status: context.state.gameStatus)
+                        Text(context.state.clockLine)
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                            .monospacedDigit()
+                    }
                 }
                 DynamicIslandExpandedRegion(.bottom) {
-                    Text(context.state.lastEvent)
+                    Text(context.state.lastPlay)
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
@@ -54,7 +60,7 @@ struct MatchScoreLiveActivity: Widget {
 // MARK: - Lock Screen View
 
 private struct LockScreenView: View {
-    let context: ActivityViewContext<MatchAttributes>
+    let context: ActivityViewContext<GameAttributes>
 
     var body: some View {
         HStack(spacing: 0) {
@@ -66,8 +72,12 @@ private struct LockScreenView: View {
             .frame(maxWidth: .infinity)
 
             VStack(spacing: 6) {
-                StatusBadge(status: context.state.matchStatus)
-                Text(context.state.lastEvent)
+                StatusBadge(status: context.state.gameStatus)
+                Text(context.state.clockLine)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .monospacedDigit()
+                Text(context.state.lastPlay)
                     .font(.caption2)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -109,10 +119,10 @@ private struct TeamScoreView: View {
 }
 
 private struct StatusBadge: View {
-    let status: MatchAttributes.ContentState.MatchStatus
+    let status: GameAttributes.ContentState.GameStatus
 
     var body: some View {
-        Text(status.rawValue.uppercased())
+        Text(status.label)
             .font(.caption2)
             .fontWeight(.bold)
             .padding(.horizontal, 8)
@@ -124,9 +134,30 @@ private struct StatusBadge: View {
 
     private var badgeColor: Color {
         switch status {
-        case .upcoming: return .blue
+        case .scheduled: return .blue
         case .live: return .red
+        case .halftime: return .orange
         case .finished: return .gray
+        }
+    }
+}
+
+// MARK: - Presentation helpers
+
+extension GameAttributes.ContentState {
+    /// The period, with the game clock appended while the game is live.
+    var clockLine: String {
+        clock.isEmpty ? period : "\(period) · \(clock)"
+    }
+}
+
+extension GameAttributes.ContentState.GameStatus {
+    var label: String {
+        switch self {
+        case .scheduled: return "SCHEDULED"
+        case .live: return "LIVE"
+        case .halftime: return "HALFTIME"
+        case .finished: return "FINAL"
         }
     }
 }

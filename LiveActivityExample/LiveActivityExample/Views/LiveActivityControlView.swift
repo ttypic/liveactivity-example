@@ -4,8 +4,8 @@ struct LiveActivityControlView: View {
     let manager: LiveActivityManager
     let pushManager: AblyPushManager
 
-    @State private var homeTeam = "Arsenal"
-    @State private var awayTeam = "Chelsea"
+    @State private var homeTeam = "Lakers"
+    @State private var awayTeam = "Celtics"
     @State private var channelId = ""
     @State private var serverURL = "http://Evgeniis-MacBook-Pro.local:3000"
     @State private var isSandbox = false
@@ -13,7 +13,7 @@ struct LiveActivityControlView: View {
 
     var body: some View {
         Form {
-            Section("Match Setup") {
+            Section("Game Setup") {
                 TextField("Home Team", text: $homeTeam)
                 TextField("Away Team", text: $awayTeam)
             }

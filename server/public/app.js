@@ -83,6 +83,7 @@ document.getElementById('btn-start').addEventListener('click', () => {
   }
   apiPost('/api/live-activity/start', {
     apnsBroadcast,
+    apnsChannelId: document.getElementById('bc-apns-channel').value.trim(),
     channels,
     ...(deviceId ? { deviceId } : {}),
     homeTeam: document.getElementById('start-home').value.trim(),
@@ -99,8 +100,10 @@ document.getElementById('btn-update').addEventListener('click', () => {
     apnsBroadcast,
     homeScore: parseInt(document.getElementById('bc-home-score').value, 10),
     awayScore: parseInt(document.getElementById('bc-away-score').value, 10),
-    matchStatus: document.getElementById('bc-status').value,
-    lastEvent: document.getElementById('bc-event').value.trim(),
+    gameStatus: document.getElementById('bc-status').value,
+    period: document.getElementById('bc-period').value,
+    clock: document.getElementById('bc-clock').value.trim(),
+    lastPlay: document.getElementById('bc-play').value.trim(),
   }, btn);
 });
 

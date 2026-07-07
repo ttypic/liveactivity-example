@@ -74,9 +74,12 @@ app.post('/api/broadcasts', async (req, res) => {
 
 // Push-to-start a Live Activity on devices subscribed to the given Ably channels.
 app.post('/api/live-activity/start', async (req, res) => {
-  const { channels, deviceId, apnsBroadcast, homeTeam, awayTeam } = req.body;
+  const { channels, deviceId, apnsBroadcast, apnsChannelId, homeTeam, awayTeam } = req.body;
   if (!apnsBroadcast) {
     return res.status(400).json({ error: 'apnsBroadcast is required' });
+  }
+  if (!apnsChannelId) {
+    return res.status(400).json({ error: 'apnsChannelId is required' });
   }
   const hasChannels = Array.isArray(channels) && channels.length > 0;
   if (!hasChannels && !deviceId) {
@@ -86,8 +89,8 @@ app.post('/api/live-activity/start', async (req, res) => {
     return res.status(400).json({ error: 'homeTeam and awayTeam are required' });
   }
   try {
-    await liveActivity.start({ channels, deviceId, apnsBroadcast, homeTeam, awayTeam });
-    res.json({ success: true });
+    await liveActivity.start({ channels, deviceId, apnsBroadcast, apnsChannelId, homeTeam, awayTeam });
+    res.json({ success: true, apnsChannelId });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -95,12 +98,12 @@ app.post('/api/live-activity/start', async (req, res) => {
 
 // Broadcast an update to all subscribed Live Activities.
 app.post('/api/live-activity/update', async (req, res) => {
-  const { apnsBroadcast, homeScore, awayScore, matchStatus, lastEvent } = req.body;
+  const { apnsBroadcast, homeScore, awayScore, gameStatus, period, clock, lastPlay } = req.body;
   if (!apnsBroadcast) {
     return res.status(400).json({ error: 'apnsBroadcast is required' });
   }
   try {
-    await liveActivity.update({ apnsBroadcast, homeScore, awayScore, matchStatus, lastEvent });
+    await liveActivity.update({ apnsBroadcast, homeScore, awayScore, gameStatus, period, clock, lastPlay });
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
