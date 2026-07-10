@@ -1,23 +1,23 @@
-# Live Activities with Ably — NBA Game Score Example
+# Live Activities with Ably
 
 Drive iOS **Live Activities** (Lock Screen + Dynamic Island) from a Node.js
-server using [Ably](https://ably.com) — no APNs plumbing on your server. The
+server using [Ably](https://ably.com). The
 example shows a live NBA game score: a dashboard in the browser pushes score
 updates, and every subscribed iPhone updates in real time.
 
-Ably holds your Apple APNs auth key (uploaded once in the Ably dashboard), so:
+Ably holds Apple APNs auth key (uploaded once in the Ably dashboard):
 
-- the **server** needs only an Ably API key — no `.p8` files, no JWT signing,
+- the **server** needs only an Ably API key (no `.p8` files, no JWT signing),
   no direct APNs connections;
 - the **iOS app** authenticates with Ably token auth via the server's
-  `authUrl` endpoint — no API key ever reaches the device.
+  `authUrl` endpoint.
 
 Both Live Activity flows are covered, end to end:
 
 | Flow | What happens | Requires |
-|---|---|---|
-| **Broadcast updates** | The activity is started on-device and subscribes to an APNs broadcast channel; one push from the server updates *every* subscribed device at once | iOS 18+ |
-| **Push-to-start** | The server starts a Live Activity remotely on devices that never opened the flow — targeted by Ably channel or device ID | iOS 17.2+ |
+|---|---|----------|
+| **Broadcast updates** | The activity is started on-device and subscribes to an APNs broadcast channel; one push from the server updates *every* subscribed device at once | iOS 18+  |
+| **Push-to-start** | The server starts a Live Activity remotely on devices that never opened the flow — targeted by Ably channel or device ID | iOS 18+  |
 
 ## How it works
 
@@ -44,11 +44,11 @@ Both Live Activity flows are covered, end to end:
 ```
 LiveActivityExample/                iOS app (Xcode project)
   LiveActivityExample/              Main app target
-    Models/MatchAttributes.swift      GameAttributes — the ActivityAttributes wire contract
+    Models/GameAttributes.swift       GameAttributes — the ActivityAttributes wire contract
     Services/LiveActivityManager.swift  ActivityKit: start/end, token observation
     Services/AblyPushManager.swift      Ably device activation + push-to-start registration
     Views/                            SwiftUI control panel
-  MatchScoreWidget/                 Widget extension — Lock Screen + Dynamic Island UI
+  GameScoreWidget/                  Widget extension — Lock Screen + Dynamic Island UI
 
 server/                             Node.js dashboard
   server.js                           Express API + Ably token auth endpoint
@@ -65,8 +65,7 @@ push-to-start APIs.
 
 - An **Apple Developer account** with an APNs auth key (`.p8`) — create one
   under Certificates, Identifiers & Profiles → Keys.
-- A **physical iPhone** (push doesn't work in the Simulator), iOS 17.2+
-  (iOS 18+ for broadcast channels).
+- An **iPhone** iOS 18+
 - **Xcode 15+** and **Node.js 18+**.
 - An **Ably account** ([free signup](https://ably.com/signup)).
 
@@ -109,8 +108,8 @@ The Xcode project is included; open
 
 If you're recreating the project from scratch instead, the important bits are:
 
-- Two targets: the app and a Widget Extension (`MatchScoreWidget`).
-- `Models/MatchAttributes.swift` must belong to **both** targets — it defines
+- Two targets: the app and a Widget Extension (`GameScoreWidget`).
+- `Models/GameAttributes.swift` must belong to **both** targets — it defines
   `GameAttributes`, the shared `ActivityAttributes` type. Its name is part of
   the wire contract: the server sends `attributes-type: "GameAttributes"`.
 - `Info.plist` needs:
@@ -118,7 +117,7 @@ If you're recreating the project from scratch instead, the important bits are:
   <key>NSSupportsLiveActivities</key><true/>
   <key>NSSupportsLiveActivitiesFrequentUpdates</key><true/>
   ```
-- Deployment target iOS 17.2+ on both targets.
+- Deployment target iOS 18+ on both targets.
 
 ## Tutorial A — Broadcast updates (one push, every device)
 
@@ -219,7 +218,7 @@ app.get('/api/auth', async (req, res) => {
 
 ## Troubleshooting
 
-- **No push-to-start token in the app** — push-to-start needs iOS 17.2+ and a
+- **No push-to-start token in the app** — push-to-start needs iOS 18+ and a
   physical device; the token only appears while
   `NSSupportsLiveActivities` is set and Live Activities are allowed for the
   app in Settings.
