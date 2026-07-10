@@ -19,9 +19,8 @@ const Ably = require('ably');
 // basketball game: teams, points, status, period, clock, last play). Ably
 // passes them to APNs as-is.
 class AblyLiveActivity {
-  constructor({ apiKey, endpoint }) {
+  constructor({ apiKey }) {
     this.apiKey = apiKey;
-    this.endpoint = endpoint;
     this._rest = null;
   }
 
@@ -33,10 +32,8 @@ class AblyLiveActivity {
         throw new Error('ABLY_API_KEY is not set — add it to server/.env');
       }
       this._rest = new Ably.Rest({
-        key: this.apiKey.keyStr,
+        key: this.apiKey,
         useBinaryProtocol: false,
-        logLevel: 4,
-        ...(this.endpoint ? { endpoint: this.endpoint } : {}),
       });
     }
     return this._rest;

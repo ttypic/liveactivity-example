@@ -34,7 +34,7 @@ final class AblyPushManager: NSObject, ARTPushRegistererDelegate {
     // endpoint mints the Ably TokenRequest consumed via authUrl).
     // `pushToStartToken` is the hex string surfaced in the UI; it is converted
     // back to the raw Data the SDK expects.
-    func activate(serverBaseURL: String, pushToStartToken: String, sandbox: Bool) {
+    func activate(serverBaseURL: String, pushToStartToken: String) {
         let base = serverBaseURL.trimmingCharacters(in: .whitespacesAndNewlines)
         guard let authUrl = URL(string: "\(base)/api/auth") else {
             errorMessage = "Invalid server URL"
@@ -49,11 +49,6 @@ final class AblyPushManager: NSObject, ARTPushRegistererDelegate {
         options.authUrl = authUrl
         options.authMethod = "GET"
         options.pushRegistererDelegate = self
-        // Match the server's Ably environment. In sandbox mode the server mints
-        // tokens against the "sandbox" environment, so the client must use it too.
-        if sandbox {
-            options.environment = "sandbox"
-        }
         let rest = ARTRest(options: options)
         self.rest = rest
         self.pendingPushToStartToken = tokenData

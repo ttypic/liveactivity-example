@@ -8,7 +8,6 @@ struct LiveActivityControlView: View {
     @State private var awayTeam = "Celtics"
     @State private var channelId = ""
     @State private var serverURL = "http://Evgeniis-MacBook-Pro.local:3000"
-    @State private var isSandbox = false
     @State private var pushChannel = ""
 
     var body: some View {
@@ -81,8 +80,6 @@ struct LiveActivityControlView: View {
                         .keyboardType(.URL)
                         .disabled(pushManager.isActivated || pushManager.isActivating)
                 }
-                Toggle("Sandbox environment", isOn: $isSandbox)
-                    .disabled(pushManager.isActivated || pushManager.isActivating)
 
                 if pushManager.isActivated {
                     Label("Device Activated", systemImage: "checkmark.seal.fill")
@@ -121,7 +118,7 @@ struct LiveActivityControlView: View {
                 } else {
                     Button {
                         if let token = manager.pushToStartToken {
-                            pushManager.activate(serverBaseURL: serverURL, pushToStartToken: token, sandbox: isSandbox)
+                            pushManager.activate(serverBaseURL: serverURL, pushToStartToken: token)
                         }
                     } label: {
                         HStack {

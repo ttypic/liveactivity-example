@@ -53,7 +53,6 @@ LiveActivityExample/                iOS app (Xcode project)
 server/                             Node.js dashboard
   server.js                           Express API + Ably token auth endpoint
   ably-live-activity.js               Ably push admin client (broadcast + live activity)
-  ably-sandbox.js                     Optional: bootstraps a throwaway Ably sandbox app
   public/                             Web dashboard (HTML/CSS/JS)
 ```
 
@@ -69,8 +68,7 @@ push-to-start APIs.
 - A **physical iPhone** (push doesn't work in the Simulator), iOS 17.2+
   (iOS 18+ for broadcast channels).
 - **Xcode 15+** and **Node.js 18+**.
-- An **Ably account** ([free signup](https://ably.com/signup)) — or none at
-  all: see [sandbox mode](#no-ably-account-sandbox-mode).
+- An **Ably account** ([free signup](https://ably.com/signup)).
 
 ## Step 1 — Configure Ably
 
@@ -95,20 +93,9 @@ Open [http://localhost:3000](http://localhost:3000).
 
 | `.env` variable | Purpose |
 |---|---|
-| `ABLY_API_KEY` | Ably dashboard → your app → API Keys (needs Push Admin). Leave unset for sandbox mode |
-| `APPLE_BUNDLE_ID` | Your app's bundle ID (shown in the dashboard badge; required in sandbox mode) |
-| `APNS_ENV` | `sandbox` / `production` (dashboard badge; APNs endpoint in sandbox mode) |
-| `APPLE_TEAM_ID`, `APPLE_KEY_ID`, `APPLE_KEY_PATH` | Only needed in sandbox mode (below) |
-
-### No Ably account? Sandbox mode
-
-Leave `ABLY_API_KEY` unset and the server bootstraps a throwaway Ably
-**sandbox** app on startup (`endpoint: "nonprod:sandbox"`), configuring your
-APNs `.p8` on it from the `APPLE_*` variables. The app is ephemeral — you get a
-fresh one each start. The startup log prints the created app ID, and
-`GET /api/config` reports `mode: "sandbox"`. In the iOS app, flip on the
-**Sandbox environment** toggle before activating the device so it talks to the
-same environment.
+| `ABLY_API_KEY` | Ably dashboard → your app → API Keys (needs Push Admin) |
+| `APPLE_BUNDLE_ID` | Your app's bundle ID (shown in the dashboard badge) |
+| `APNS_ENV` | `sandbox` / `production` (shown in the dashboard badge) |
 
 ## Step 3 — Build the iOS app
 
@@ -165,8 +152,7 @@ Ably. This is the two-step device registration released in ably-cocoa 1.2.62.
    observes `Activity.pushToStartTokenUpdates`; it appears in the app UI.
 2. Check the *Server URL* field points at your machine (the app authenticates
    through the server's `/api/auth` token endpoint — the Ably API key stays
-   server-side). Enable the **Sandbox environment** toggle if the server runs
-   in sandbox mode.
+   server-side).
 3. Tap **Activate Device with Ably**. Under the hood this is two steps:
    `push.activate()` registers the device with Ably using a standard APNs
    token, then `push.registerPushToStartToken(_:)` attaches the Live Activity
@@ -241,8 +227,7 @@ app.get('/api/auth', async (req, res) => {
   app in Settings.
 - **Activation fails with an auth error** — the device must reach the server's
   `/api/auth` over your local network; check the *Server URL* uses your Mac's
-  hostname/IP, not `localhost`. In sandbox mode, the **Sandbox environment**
-  toggle must be on.
+  hostname/IP, not `localhost`.
 - **Updates don't arrive** — verify the APNs key in Ably's Push settings uses
   the **sandbox** endpoint for development builds, and that the bundle ID
   matches exactly.
