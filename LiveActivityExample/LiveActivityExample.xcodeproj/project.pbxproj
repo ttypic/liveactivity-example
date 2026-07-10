@@ -767,8 +767,8 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/ably/ably-cocoa";
 			requirement = {
-				branch = "AIT-465/liveactivity-pts-activation";
-				kind = branch;
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.2.62;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */

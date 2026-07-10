@@ -6,8 +6,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/ably/ably-cocoa",
       "state" : {
-        "branch" : "AIT-465/liveactivity-pts-activation",
-        "revision" : "0fec56c8bf863ef89623066118b57e2b2b9097c3"
+        "revision" : "0effa5c10a130762dba16ba391a8296755a11014",
+        "version" : "1.2.62"
       }
     },
     {

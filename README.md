@@ -1,162 +1,251 @@
-# Live Activity Example
+# Live Activities with Ably — NBA Game Score Example
 
-iOS Live Activity demo with a Node.js server dashboard. The server drives Live
-Activities over an **APNS broadcast channel via [Ably](https://ably.com)** — the
-server holds only an Ably API key, and the Apple APNS auth key is configured in
-the Ably app. Two ways to control a Live Activity:
+Drive iOS **Live Activities** (Lock Screen + Dynamic Island) from a Node.js
+server using [Ably](https://ably.com) — no APNs plumbing on your server. The
+example shows a live NBA game score: a dashboard in the browser pushes score
+updates, and every subscribed iPhone updates in real time.
 
-- **Local** — start/end directly from the app using ActivityKit. Optionally
-  subscribe the started activity to a broadcast channel (`pushType: .channel`).
-- **Broadcast** — update or end all subscribed activities simultaneously via the
-  Ably push admin API (iOS 18+).
+Ably holds your Apple APNs auth key (uploaded once in the Ably dashboard), so:
 
-> **Note on Push-to-Start:** the dashboard also exposes a push-to-start
-> (`liveActivity.start`) action. Ably's push-to-start targets devices that are
-> registered with Ably push and subscribed to an Ably channel — the iOS app in
-> this example does **not** integrate the Ably SDK, so that action is wired but
-> won't drive a device until Ably push is added to the app. The working
-> end-to-end flow is: create broadcast → start the activity locally subscribed to
-> the returned APNS channel id → update/end via the broadcast id.
+- the **server** needs only an Ably API key — no `.p8` files, no JWT signing,
+  no direct APNs connections;
+- the **iOS app** authenticates with Ably token auth via the server's
+  `authUrl` endpoint — no API key ever reaches the device.
 
-The Live Activity displays a sports match score with Dynamic Island support.
+Both Live Activity flows are covered, end to end:
 
----
+| Flow | What happens | Requires |
+|---|---|---|
+| **Broadcast updates** | The activity is started on-device and subscribes to an APNs broadcast channel; one push from the server updates *every* subscribed device at once | iOS 18+ |
+| **Push-to-start** | The server starts a Live Activity remotely on devices that never opened the flow — targeted by Ably channel or device ID | iOS 17.2+ |
 
-## Project Structure
+## How it works
 
 ```
-LiveActivityExample/        iOS Xcode project
-  LiveActivityExample/      Main app target
-    Models/MatchAttributes.swift    Shared ActivityAttributes (add to both targets)
-    Services/LiveActivityManager.swift
-    Views/
-  MatchScoreWidget/         Widget extension target
-
-server/                     Node.js dashboard
-  ably-live-activity.js     Ably push admin client (broadcast + live activity)
-  apns.js                   Legacy direct-APNS client (unused, kept for reference)
-  server.js                 Express API server
-  public/                   Web dashboard (HTML/CSS/JS)
+┌────────────────┐   Ably push admin API   ┌────────┐   APNs    ┌─────────────────┐
+│ Node dashboard │ ───────────────────────▶│  Ably  │ ─────────▶│ iPhone           │
+│ (ably-js)      │  broadcast / start /    │        │  channel  │  Live Activity   │
+│                │  update / end           │ holds  │  fan-out  │  (Lock Screen +  │
+│  /api/auth ◀───┼─────────────────────────┼─ .p8 ──┼───────────┤   Dynamic Island)│
+└────────────────┘   token auth (authUrl)  └────────┘           └─────────────────┘
 ```
 
----
+1. The server creates an **APNs broadcast channel** through Ably and gets back
+   a `{ id, apnsChannelId }` pair.
+2. The iOS app either starts an activity locally subscribed to that
+   `apnsChannelId` (`pushType: .channel`), or registers its **push-to-start
+   token** with Ably so the server can start the activity remotely.
+3. The dashboard calls Ably's push admin Live Activity API
+   (`start` / `update` / `end`); Ably signs the APNs request with your `.p8`
+   and APNs fans the update out to every subscribed device.
 
-## iOS Setup
+## What's in the repo
 
-### Requirements
-- iOS 17.2+ deployment target
-- Physical device (push notifications don't work in Simulator)
-- Apple Developer account with push notifications enabled
+```
+LiveActivityExample/                iOS app (Xcode project)
+  LiveActivityExample/              Main app target
+    Models/MatchAttributes.swift      GameAttributes — the ActivityAttributes wire contract
+    Services/LiveActivityManager.swift  ActivityKit: start/end, token observation
+    Services/AblyPushManager.swift      Ably device activation + push-to-start registration
+    Views/                            SwiftUI control panel
+  MatchScoreWidget/                 Widget extension — Lock Screen + Dynamic Island UI
 
-### Steps
+server/                             Node.js dashboard
+  server.js                           Express API + Ably token auth endpoint
+  ably-live-activity.js               Ably push admin client (broadcast + live activity)
+  ably-sandbox.js                     Optional: bootstraps a throwaway Ably sandbox app
+  public/                             Web dashboard (HTML/CSS/JS)
+```
 
-1. Open Xcode → File → New → Project → iOS App
-   - Name: `LiveActivityExample`, Swift/SwiftUI
+**SDK versions:** [ably-cocoa 1.2.62+](https://github.com/ably/ably-cocoa)
+(Swift Package Manager) on iOS, [ably 2.24.0+](https://www.npmjs.com/package/ably)
+(npm) on the server — the first releases with the Live Activity push admin and
+push-to-start APIs.
 
-2. Add Widget Extension target:
-   File → New → Target → Widget Extension
-   - Name: `MatchScoreWidget`
-   - Uncheck "Include Live Activity" (we write it manually)
+## Prerequisites
 
-3. Add source files to the project and set **target membership**:
-   - `Models/MatchAttributes.swift` → **both** `LiveActivityExample` AND `MatchScoreWidget`
-   - All other `LiveActivityExample/` files → `LiveActivityExample` only
-   - All `MatchScoreWidget/` files → `MatchScoreWidget` only
+- An **Apple Developer account** with an APNs auth key (`.p8`) — create one
+  under Certificates, Identifiers & Profiles → Keys.
+- A **physical iPhone** (push doesn't work in the Simulator), iOS 17.2+
+  (iOS 18+ for broadcast channels).
+- **Xcode 15+** and **Node.js 18+**.
+- An **Ably account** ([free signup](https://ably.com/signup)) — or none at
+  all: see [sandbox mode](#no-ably-account-sandbox-mode).
 
-4. Main app target → Signing & Capabilities → **+ Push Notifications**
+## Step 1 — Configure Ably
 
-5. Set deployment target to **iOS 17.2** for both targets
+1. Create an Ably app (or use an existing one).
+2. In the app's **Push** settings, upload your APNs auth key: the `.p8`
+   contents, Key ID, Team ID, and your app's bundle ID. Select the sandbox
+   APNs endpoint for development builds.
+3. Create an API key with the **Push Admin** capability.
 
-6. Use the provided `Info.plist` for the main app target (or merge the keys into your existing one):
-   ```xml
-   <key>NSSupportsLiveActivities</key><true/>
-   <key>NSSupportsLiveActivitiesFrequentUpdates</key><true/>
-   ```
+That's the only place your Apple credentials live — the server never sees them.
 
-7. Use the provided `.entitlements` file for the main app target (or verify `aps-environment` = `development`)
-
----
-
-## Server Setup
-
-### Requirements
-- Node.js 18+
-- An Ably account and an app with **Push** configured: upload your Apple APNS
-  auth key (`.p8`) in the Ably app's Push settings. Create an API key with the
-  **Push Admin** capability.
-- The Ably JS SDK is vendored as `server/ably-2.22.1.tgz` and installed from there.
-
-### Steps
+## Step 2 — Run the server
 
 ```bash
 cd server
 npm install
-cp .env.example .env
-# Edit .env: set ABLY_API_KEY (and APPLE_BUNDLE_ID for the dashboard badge)
+cp .env.example .env   # set ABLY_API_KEY (and APPLE_BUNDLE_ID for the dashboard badge)
 npm start
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+Open [http://localhost:3000](http://localhost:3000).
 
-### .env values
-
-| Variable | Where to find it |
+| `.env` variable | Purpose |
 |---|---|
-| `ABLY_API_KEY` | Ably dashboard → your app → API Keys (needs Push Admin). **Optional** — unset it to use sandbox mode (below) |
-| `APPLE_BUNDLE_ID` | The bundle ID you set in Xcode (shown in the dashboard badge) |
-| `APNS_ENV` | `sandbox`/`production` (shown in the dashboard badge) |
+| `ABLY_API_KEY` | Ably dashboard → your app → API Keys (needs Push Admin). Leave unset for sandbox mode |
+| `APPLE_BUNDLE_ID` | Your app's bundle ID (shown in the dashboard badge; required in sandbox mode) |
+| `APNS_ENV` | `sandbox` / `production` (dashboard badge; APNs endpoint in sandbox mode) |
+| `APPLE_TEAM_ID`, `APPLE_KEY_ID`, `APPLE_KEY_PATH` | Only needed in sandbox mode (below) |
 
-### Sandbox mode (no Ably account)
+### No Ably account? Sandbox mode
 
-If you leave `ABLY_API_KEY` **unset**, the server bootstraps a throwaway Ably
-**sandbox** app on startup and connects to it via `endpoint: "nonprod:sandbox"`:
+Leave `ABLY_API_KEY` unset and the server bootstraps a throwaway Ably
+**sandbox** app on startup (`endpoint: "nonprod:sandbox"`), configuring your
+APNs `.p8` on it from the `APPLE_*` variables. The app is ephemeral — you get a
+fresh one each start. The startup log prints the created app ID, and
+`GET /api/config` reports `mode: "sandbox"`. In the iOS app, flip on the
+**Sandbox environment** toggle before activating the device so it talks to the
+same environment.
 
-1. It creates a test app at `https://sandbox.realtime.ably-nonprod.net/apps`
-   (using the shared `ably-common` test-app spec, with an inline fallback if that
-   can't be fetched).
-2. It configures your Apple APNS auth key as APNS **token** auth in the same
-   create call — sending `apnsSigningKey` (the `.p8` from `APPLE_KEY_PATH`),
-   `apnsSigningKeyId` (`APPLE_KEY_ID`), `apnsIssuerKey` (`APPLE_TEAM_ID`),
-   `apnsTopicHeader` (`APPLE_BUNDLE_ID`) and `apnsUseSandboxEndpoint` (from `APNS_ENV`).
-3. The minted key is used for the rest of the session.
+## Step 3 — Build the iOS app
 
-The created app is ephemeral. On startup you'll see
-`Created Ably sandbox app <appId> (endpoint nonprod:sandbox)`, and `GET /api/config`
-reports `mode: "sandbox"`. In this mode the `APPLE_*` vars are **required** (they
-supply the APNS credentials); in configured mode (`ABLY_API_KEY` set) the APNS key
-instead lives in your Ably app's Push settings and the `APPLE_*` vars are only
-used by the legacy `apns.js` helper.
+The Xcode project is included; open
+`LiveActivityExample/LiveActivityExample.xcodeproj`, then:
 
----
+1. **Signing & Capabilities** (main app target): set your team, make sure
+   **Push Notifications** is added, and `aps-environment` is `development`.
+2. Set the bundle ID to match what you configured in Ably's Push settings.
+3. The **ably-cocoa** package (1.2.62, via SPM) resolves automatically on
+   first open.
+4. Build to a **physical device**.
 
-## How to Use
+If you're recreating the project from scratch instead, the important bits are:
 
-1. **Start server**: `cd server && npm start` → open `http://localhost:3000`.
+- Two targets: the app and a Widget Extension (`MatchScoreWidget`).
+- `Models/MatchAttributes.swift` must belong to **both** targets — it defines
+  `GameAttributes`, the shared `ActivityAttributes` type. Its name is part of
+  the wire contract: the server sends `attributes-type: "GameAttributes"`.
+- `Info.plist` needs:
+  ```xml
+  <key>NSSupportsLiveActivities</key><true/>
+  <key>NSSupportsLiveActivitiesFrequentUpdates</key><true/>
+  ```
+- Deployment target iOS 17.2+ on both targets.
 
-2. **Create a broadcast**: click "Create Broadcast". The dashboard shows:
-   - **Broadcast ID** — the Ably id used for start/update/end.
-   - **APNS Channel ID** — paste this into the iOS app.
+## Tutorial A — Broadcast updates (one push, every device)
 
-3. **Run the iOS app** on a physical device, paste the **APNS Channel ID** into
-   the "Broadcast Channel" field, then tap "Start Live Activity Locally". The
-   activity subscribes to the channel via `pushType: .channel`.
+The activity is started **on the device**, subscribed to an APNs broadcast
+channel; the dashboard then updates all subscribed devices with a single call.
 
-4. **Update / End**: in the dashboard, adjust scores and use "Send Update" /
-   "End Activity" — these broadcast to every subscribed activity via the
-   Broadcast ID. You can also end locally from the app.
+1. In the dashboard, click **Create Broadcast**. You get two IDs:
+   - **Broadcast ID** — the Ably handle used for update/end calls;
+   - **APNS Channel ID** — what devices subscribe to.
+2. In the iOS app, paste the **APNS Channel ID** into the *Broadcast Channel*
+   field and tap **Start Live Activity Locally**. The activity starts with
+   `pushType: .channel(apnsChannelId)`.
+3. Back in the dashboard, change the points, period, clock, or last play and
+   click **Send Update** — every subscribed device updates simultaneously.
+   No per-device tokens are ever collected.
+4. **End Activity** ends it everywhere (and invalidates the broadcast).
 
-5. _(Advanced)_ **Start Live Activity** in the dashboard performs an Ably
-   push-to-start to devices subscribed to the given Ably channel(s). This needs
-   the app to integrate Ably push (not included here) — see the note at the top.
+Repeat step 2 on more devices to see the fan-out: one `update()` call, all
+screens change at once.
 
----
+## Tutorial B — Push-to-start (server starts the activity remotely)
 
-## API Notes
+Here the device runs no activity at all — the server starts one on it via
+Ably. This is the two-step device registration released in ably-cocoa 1.2.62.
 
-- The server uses the Ably JS SDK push admin API:
-  - `rest.push.admin.createApnsBroadcast({ messageStoragePolicy })` → `{ id, apnsChannelId }`
-  - `rest.push.admin.liveActivity.start({ recipient: { channels }, apnsBroadcast, apns })`
-  - `rest.push.admin.liveActivity.update({ apnsBroadcast, apns, headers })`
-  - `rest.push.admin.liveActivity.end({ apnsBroadcast, apns, headers })`
-- The `apns` field is a standard APNS Live Activity payload (`{ aps: { event, content-state, … } }`), passed through to APNS by Ably.
-- Ably holds the APNS auth key, so the server needs no `.p8` or JWT signing of its own.
+**On the device (one-time setup):**
+
+1. Launch the app. iOS issues a **push-to-start token** as soon as the app
+   observes `Activity.pushToStartTokenUpdates`; it appears in the app UI.
+2. Check the *Server URL* field points at your machine (the app authenticates
+   through the server's `/api/auth` token endpoint — the Ably API key stays
+   server-side). Enable the **Sandbox environment** toggle if the server runs
+   in sandbox mode.
+3. Tap **Activate Device with Ably**. Under the hood this is two steps:
+   `push.activate()` registers the device with Ably using a standard APNs
+   token, then `push.registerPushToStartToken(_:)` attaches the Live Activity
+   push-to-start token to that registration.
+4. Subscribe the device to an Ably channel, e.g. `games:lal-bos` — this is how
+   the server targets it. (The app also shows the **Ably Device ID** if you'd
+   rather target one device directly.)
+
+**From the dashboard:**
+
+5. Click **Create Broadcast** (push-to-start also enrolls the new activity
+   into a broadcast channel, so you can update it the same way as Tutorial A).
+6. In *Start Live Activity*, enter the channel from step 4 (or paste the
+   Device ID), set the teams, and click **Start Live Activity**.
+7. The Live Activity appears on the device — even if the app is in the
+   background — already subscribed to the broadcast. Use **Send Update** /
+   **End Activity** as before.
+
+## API reference
+
+Everything the server does goes through the Ably JS SDK's push admin API:
+
+```js
+const rest = new Ably.Rest({ key: ABLY_API_KEY });
+
+// 1. Create a broadcast channel → { id, apnsChannelId }
+await rest.push.admin.createApnsBroadcast({ messageStoragePolicy: 1 });
+
+// 2. Push-to-start on devices subscribed to a channel (or by deviceId)
+await rest.push.admin.liveActivity.start({
+  recipient: { channels: ['games:lal-bos'] },   // or { deviceId }
+  apnsBroadcast: id,          // enroll the started activity into the broadcast
+  apns: {
+    aps: {
+      event: 'start',
+      'input-push-channel': apnsChannelId,
+      'attributes-type': 'GameAttributes',      // must match the Swift type name
+      attributes: { homeTeam, awayTeam },
+      'content-state': { homeScore: 0, awayScore: 0, /* … */ },
+      alert: { title: 'Lakers vs Celtics', body: 'Game starting!' },
+      timestamp: Math.floor(Date.now() / 1000),
+    },
+  },
+  headers: { 'apns-priority': 10 },
+});
+
+// 3. Update / end all subscribed activities with one call
+await rest.push.admin.liveActivity.update({ apnsBroadcast: id, apns, headers });
+await rest.push.admin.liveActivity.end({ apnsBroadcast: id, apns, headers });
+```
+
+The `apns` field is a standard [APNs Live Activity payload](https://developer.apple.com/documentation/activitykit/starting-and-updating-live-activities-with-activitykit-push-notifications)
+— Ably signs it and passes it through unchanged. `messageStoragePolicy: 1`
+caches the last update so late-joining devices receive the current
+content-state when they subscribe.
+
+The token auth endpoint is a one-liner — the device's `authUrl` points here:
+
+```js
+app.get('/api/auth', async (req, res) => {
+  res.json(await rest.auth.createTokenRequest({
+    capability: JSON.stringify({ '*': ['subscribe', 'publish', 'push-subscribe'] }),
+  }));
+});
+```
+
+## Troubleshooting
+
+- **No push-to-start token in the app** — push-to-start needs iOS 17.2+ and a
+  physical device; the token only appears while
+  `NSSupportsLiveActivities` is set and Live Activities are allowed for the
+  app in Settings.
+- **Activation fails with an auth error** — the device must reach the server's
+  `/api/auth` over your local network; check the *Server URL* uses your Mac's
+  hostname/IP, not `localhost`. In sandbox mode, the **Sandbox environment**
+  toggle must be on.
+- **Updates don't arrive** — verify the APNs key in Ably's Push settings uses
+  the **sandbox** endpoint for development builds, and that the bundle ID
+  matches exactly.
+- **Broadcast subscribe silently ignored** — `pushType: .channel` requires
+  iOS 18+; on 17.x start the activity without a channel and use its
+  per-activity update token instead.
