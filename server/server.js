@@ -11,14 +11,6 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 const liveActivity = new AblyLiveActivity({ apiKey: process.env.ABLY_API_KEY });
 
-// Config for the dashboard UI
-app.get('/api/config', (req, res) => {
-  res.json({
-    bundleId: process.env.APPLE_BUNDLE_ID,
-    apnsEnv: process.env.APNS_ENV || 'sandbox',
-  });
-});
-
 // Ably token auth endpoint. The iOS app points its Ably `authUrl` here; we
 // return a signed TokenRequest so the device can authenticate (and activate
 // itself for Live Activity push-to-start) without ever seeing the API key.

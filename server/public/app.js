@@ -1,16 +1,5 @@
 'use strict';
 
-// Load server config
-fetch('/api/config')
-  .then((r) => r.json())
-  .then((cfg) => {
-    document.getElementById('config-badge').textContent =
-      `${cfg.bundleId} · ${cfg.apnsEnv}`;
-  })
-  .catch(() => {
-    document.getElementById('config-badge').textContent = 'config unavailable';
-  });
-
 // Logging
 function log(message, type = 'info') {
   const container = document.getElementById('log');

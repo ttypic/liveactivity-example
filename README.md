@@ -85,17 +85,15 @@ That's the only place your Apple credentials live — the server never sees them
 ```bash
 cd server
 npm install
-cp .env.example .env   # set ABLY_API_KEY (and APPLE_BUNDLE_ID for the dashboard badge)
+cp .env.example .env   # set ABLY_API_KEY
 npm start
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
 
-| `.env` variable | Purpose |
-|---|---|
-| `ABLY_API_KEY` | Ably dashboard → your app → API Keys (needs Push Admin) |
-| `APPLE_BUNDLE_ID` | Your app's bundle ID (shown in the dashboard badge) |
-| `APNS_ENV` | `sandbox` / `production` (shown in the dashboard badge) |
+The only required `.env` value is `ABLY_API_KEY` — the key with Push Admin
+capability from Step 1 (Ably dashboard → your app → API Keys). Set `PORT` to
+change the dashboard port (default 3000).
 
 ## Step 3 — Build the iOS app
 
