@@ -2,7 +2,7 @@ import WidgetKit
 import SwiftUI
 
 @main
-struct MatchScoreWidgetBundle: WidgetBundle {
+struct GameScoreWidgetBundle: WidgetBundle {
     var body: some Widget {
         GameScoreLiveActivity()
     }

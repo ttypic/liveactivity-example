@@ -9,7 +9,7 @@
 /* Begin PBXBuildFile section */
 		5C51CCD82F72A92A0085A93C /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5C51CCD72F72A92A0085A93C /* WidgetKit.framework */; };
 		5C51CCDA2F72A92A0085A93C /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5C51CCD92F72A92A0085A93C /* SwiftUI.framework */; };
-		5C51CCEB2F72A92C0085A93C /* MatchScoreWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 5C51CCD52F72A92A0085A93C /* MatchScoreWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		5C51CCEB2F72A92C0085A93C /* GameScoreWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 5C51CCD52F72A92A0085A93C /* GameScoreWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		AB1E000000000000000000A3 /* Ably in Frameworks */ = {isa = PBXBuildFile; productRef = AB1E000000000000000000A2 /* Ably */; };
 /* End PBXBuildFile section */
 
@@ -33,7 +33,7 @@
 			containerPortal = 5C51CC9F2F72A8B80085A93C /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 5C51CCD42F72A92A0085A93C;
-			remoteInfo = MatchScoreWidgetExtension;
+			remoteInfo = GameScoreWidgetExtension;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -44,7 +44,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 13;
 			files = (
-				5C51CCEB2F72A92C0085A93C /* MatchScoreWidgetExtension.appex in Embed Foundation Extensions */,
+				5C51CCEB2F72A92C0085A93C /* GameScoreWidgetExtension.appex in Embed Foundation Extensions */,
 			);
 			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -55,25 +55,25 @@
 		5C51CCA72F72A8B80085A93C /* LiveActivityExample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LiveActivityExample.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5C51CCB42F72A8B90085A93C /* LiveActivityExampleTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = LiveActivityExampleTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		5C51CCBE2F72A8B90085A93C /* LiveActivityExampleUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = LiveActivityExampleUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		5C51CCD52F72A92A0085A93C /* MatchScoreWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = MatchScoreWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		5C51CCD52F72A92A0085A93C /* GameScoreWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = GameScoreWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		5C51CCD72F72A92A0085A93C /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		5C51CCD92F72A92A0085A93C /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		5C51CD112F72AE410085A93C /* Exceptions for "LiveActivityExample" folder in "MatchScoreWidgetExtension" target */ = {
+		5C51CD112F72AE410085A93C /* Exceptions for "LiveActivityExample" folder in "GameScoreWidgetExtension" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				Models/MatchAttributes.swift,
+				Models/GameAttributes.swift,
 			);
-			target = 5C51CCD42F72A92A0085A93C /* MatchScoreWidgetExtension */;
+			target = 5C51CCD42F72A92A0085A93C /* GameScoreWidgetExtension */;
 		};
-		5C51CD202F72AE410085A93C /* Exceptions for "MatchScoreWidget" folder in "MatchScoreWidgetExtension" target */ = {
+		5C51CD202F72AE410085A93C /* Exceptions for "GameScoreWidget" folder in "GameScoreWidgetExtension" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
 			);
-			target = 5C51CCD42F72A92A0085A93C /* MatchScoreWidgetExtension */;
+			target = 5C51CCD42F72A92A0085A93C /* GameScoreWidgetExtension */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
@@ -81,7 +81,7 @@
 		5C51CCA92F72A8B80085A93C /* LiveActivityExample */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				5C51CD112F72AE410085A93C /* Exceptions for "LiveActivityExample" folder in "MatchScoreWidgetExtension" target */,
+				5C51CD112F72AE410085A93C /* Exceptions for "LiveActivityExample" folder in "GameScoreWidgetExtension" target */,
 			);
 			path = LiveActivityExample;
 			sourceTree = "<group>";
@@ -96,12 +96,12 @@
 			path = LiveActivityExampleUITests;
 			sourceTree = "<group>";
 		};
-		5C51CCDB2F72A92A0085A93C /* MatchScoreWidget */ = {
+		5C51CCDB2F72A92A0085A93C /* GameScoreWidget */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				5C51CD202F72AE410085A93C /* Exceptions for "MatchScoreWidget" folder in "MatchScoreWidgetExtension" target */,
+				5C51CD202F72AE410085A93C /* Exceptions for "GameScoreWidget" folder in "GameScoreWidgetExtension" target */,
 			);
-			path = MatchScoreWidget;
+			path = GameScoreWidget;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -147,7 +147,7 @@
 				5C51CCA92F72A8B80085A93C /* LiveActivityExample */,
 				5C51CCB72F72A8B90085A93C /* LiveActivityExampleTests */,
 				5C51CCC12F72A8B90085A93C /* LiveActivityExampleUITests */,
-				5C51CCDB2F72A92A0085A93C /* MatchScoreWidget */,
+				5C51CCDB2F72A92A0085A93C /* GameScoreWidget */,
 				5C51CCD62F72A92A0085A93C /* Frameworks */,
 				5C51CCA82F72A8B80085A93C /* Products */,
 			);
@@ -159,7 +159,7 @@
 				5C51CCA72F72A8B80085A93C /* LiveActivityExample.app */,
 				5C51CCB42F72A8B90085A93C /* LiveActivityExampleTests.xctest */,
 				5C51CCBE2F72A8B90085A93C /* LiveActivityExampleUITests.xctest */,
-				5C51CCD52F72A92A0085A93C /* MatchScoreWidgetExtension.appex */,
+				5C51CCD52F72A92A0085A93C /* GameScoreWidgetExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -247,9 +247,9 @@
 			productReference = 5C51CCBE2F72A8B90085A93C /* LiveActivityExampleUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
-		5C51CCD42F72A92A0085A93C /* MatchScoreWidgetExtension */ = {
+		5C51CCD42F72A92A0085A93C /* GameScoreWidgetExtension */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 5C51CCED2F72A92C0085A93C /* Build configuration list for PBXNativeTarget "MatchScoreWidgetExtension" */;
+			buildConfigurationList = 5C51CCED2F72A92C0085A93C /* Build configuration list for PBXNativeTarget "GameScoreWidgetExtension" */;
 			buildPhases = (
 				5C51CCD12F72A92A0085A93C /* Sources */,
 				5C51CCD22F72A92A0085A93C /* Frameworks */,
@@ -260,13 +260,13 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				5C51CCDB2F72A92A0085A93C /* MatchScoreWidget */,
+				5C51CCDB2F72A92A0085A93C /* GameScoreWidget */,
 			);
-			name = MatchScoreWidgetExtension;
+			name = GameScoreWidgetExtension;
 			packageProductDependencies = (
 			);
-			productName = MatchScoreWidgetExtension;
-			productReference = 5C51CCD52F72A92A0085A93C /* MatchScoreWidgetExtension.appex */;
+			productName = GameScoreWidgetExtension;
+			productReference = 5C51CCD52F72A92A0085A93C /* GameScoreWidgetExtension.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
@@ -316,7 +316,7 @@
 				5C51CCA62F72A8B80085A93C /* LiveActivityExample */,
 				5C51CCB32F72A8B90085A93C /* LiveActivityExampleTests */,
 				5C51CCBD2F72A8B90085A93C /* LiveActivityExampleUITests */,
-				5C51CCD42F72A92A0085A93C /* MatchScoreWidgetExtension */,
+				5C51CCD42F72A92A0085A93C /* GameScoreWidgetExtension */,
 			);
 		};
 /* End PBXProject section */
@@ -396,7 +396,7 @@
 		};
 		5C51CCEA2F72A92C0085A93C /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 5C51CCD42F72A92A0085A93C /* MatchScoreWidgetExtension */;
+			target = 5C51CCD42F72A92A0085A93C /* GameScoreWidgetExtension */;
 			targetProxy = 5C51CCE92F72A92C0085A93C /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -665,8 +665,8 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = XXY98AVDR6;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = MatchScoreWidget/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = MatchScoreWidget;
+				INFOPLIST_FILE = GameScoreWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = GameScoreWidget;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -674,7 +674,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.ably.eugene.LiveActivityExample.MatchScoreWidget;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ably.eugene.LiveActivityExample.GameScoreWidget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -694,8 +694,8 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = XXY98AVDR6;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = MatchScoreWidget/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = MatchScoreWidget;
+				INFOPLIST_FILE = GameScoreWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = GameScoreWidget;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -703,7 +703,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.ably.eugene.LiveActivityExample.MatchScoreWidget;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ably.eugene.LiveActivityExample.GameScoreWidget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -751,7 +751,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		5C51CCED2F72A92C0085A93C /* Build configuration list for PBXNativeTarget "MatchScoreWidgetExtension" */ = {
+		5C51CCED2F72A92C0085A93C /* Build configuration list for PBXNativeTarget "GameScoreWidgetExtension" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				5C51CCEE2F72A92C0085A93C /* Debug */,

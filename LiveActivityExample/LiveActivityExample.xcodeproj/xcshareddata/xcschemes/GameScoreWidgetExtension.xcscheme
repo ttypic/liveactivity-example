@@ -17,8 +17,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "5C51CCD42F72A92A0085A93C"
-               BuildableName = "MatchScoreWidgetExtension.appex"
-               BlueprintName = "MatchScoreWidgetExtension"
+               BuildableName = "GameScoreWidgetExtension.appex"
+               BlueprintName = "GameScoreWidgetExtension"
                ReferencedContainer = "container:LiveActivityExample.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>

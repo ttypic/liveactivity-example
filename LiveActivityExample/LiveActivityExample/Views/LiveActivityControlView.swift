@@ -7,7 +7,7 @@ struct LiveActivityControlView: View {
     @State private var homeTeam = "Lakers"
     @State private var awayTeam = "Celtics"
     @State private var channelId = ""
-    @State private var serverURL = "http://Evgeniis-MacBook-Pro.local:3000"
+    @State private var serverURL = "http://localhost:3000"
     @State private var pushChannel = ""
 
     var body: some View {
