@@ -104,7 +104,7 @@ The Xcode project is included; open
 2. Set the bundle ID to match what you configured in Ably's Push settings.
 3. The **ably-cocoa** package (1.2.62, via SPM) resolves automatically on
    first open.
-4. Build to a **physical device**.
+4. Build to a physical device or emulator.
 
 If you're recreating the project from scratch instead, the important bits are:
 
@@ -219,7 +219,7 @@ app.get('/api/auth', async (req, res) => {
 ## Troubleshooting
 
 - **No push-to-start token in the app** — push-to-start needs iOS 18+ and a
-  physical device; the token only appears while
+  physical device or emulator; the token only appears while
   `NSSupportsLiveActivities` is set and Live Activities are allowed for the
   app in Settings.
 - **Activation fails with an auth error** — the device must reach the server's
