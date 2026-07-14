@@ -93,7 +93,7 @@ class AblyLiveActivity {
       recipient,
       apnsBroadcast,
       apns,
-      headers: { 'apns-priority': 10 },
+      headers: { 'apns-priority': '10' },
     });
   }
 

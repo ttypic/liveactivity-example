@@ -193,7 +193,7 @@ await rest.push.admin.liveActivity.start({
       timestamp: Math.floor(Date.now() / 1000),
     },
   },
-  headers: { 'apns-priority': 10 },
+  headers: { 'apns-priority': '10' },
 });
 
 // 3. Update / end all subscribed activities with one call
